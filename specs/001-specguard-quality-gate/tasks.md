@@ -402,3 +402,15 @@ Task: "T054 tests/unit/test_policy.py"
 ## Phase 14: Convergence
 
 - [X] T077 在 Markdown 的证据定位中写明已有发现的文件和行；没有位置时标明不可用，不得编造行号 per US1/AC6 (partial)
+
+---
+
+## Phase 15: 安装命令
+
+**Purpose**: 使用者安装 `specguard` 命令后，在被审核仓库里运行。不把 SpecGuard 源码克隆进该仓库。v0.1 交付 Python 控制台脚本，不要求原生二进制。
+
+**Independent Test**: 在一个不含 `src/specguard` 的目录里执行已安装的 `specguard version`，命令可用且不要求当前目录是 SpecGuard 源码检出。
+
+- [ ] T078 在 `tests/unit/test_install_entry.py` 中编写失败测试：`pyproject.toml` 的 `[project.scripts]` 将 `specguard` 指向 `specguard.cli.main:app`；`docs/install.md` 写明使用者安装命令后在被审核仓库运行、不克隆 SpecGuard 源码，并且 v0.1 不要求原生二进制
+- [ ] T079 在 `pyproject.toml` 中保留控制台脚本 `specguard = "specguard.cli.main:app"`，不添加原生二进制打包配置
+- [ ] T080 [P] 在 `docs/install.md` 中写明使用者把 `specguard` 安装到命令路径，再到被审核的 Java 仓库运行；该仓库不包含 SpecGuard 源码。开发者才在本仓库源码检出中测试
