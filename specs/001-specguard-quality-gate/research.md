@@ -2,6 +2,12 @@
 
 本文件把实现计划里的技术选择固定下来。规格本身不规定实现技术；这些决定来自 SpecGuard v0.1 设计包，并对照宪章做了取舍。没有遗留的 `NEEDS CLARIFICATION`。
 
+## Decision: 使用者安装命令，不在被审核仓库里拉取源码
+
+- **Decision**: SpecGuard 的使用方式对齐本机已安装的 Spec Kit `specify` 1.2.0。使用者得到 PATH 上的 `specguard` 命令，然后在 Java 仓库的工作目录里运行。被审核仓库不包含 SpecGuard 的 Git 检出。v0.1 的安装形态是 Python 控制台脚本，由安装器放到命令路径；不把单个原生二进制列为必须交付。SpecGuard 的开发、测试和打包仍在本仓库的源码检出中完成。
+- **Rationale**: 本机的 `specify` 是 `~/.local/bin/specify`，指向 uv 工具环境里的 Python 入口脚本，不是把 Spec Kit 源码克隆进当前项目后再运行。审核工具若要求先克隆再运行，就会把工具源码混进被审核仓库，和只读质量门的用法相反。
+- **Alternatives considered**: 要求 `git clone` 后在源码树里运行，只适合 SpecGuard 开发者。用 Go 或打包器做成单个原生二进制可以去掉对 Python 的依赖，但 Spec Kit 本身也不是这种二进制，v0.1 没有额外理由更换实现语言。
+
 ## Decision: 用 Python 3.11 实现只读 CLI
 
 - **Decision**: SpecGuard 本体使用 Python 3.11 或更高版本，作为本地命令行工具发布。审核对象仍是 Java / Spring Boot 仓库，SpecGuard 不因此改用 Java。

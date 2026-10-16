@@ -4,19 +4,20 @@
 
 ## 前提
 
-- Python 3.11 或更高版本。
+使用者不克隆 SpecGuard 源码。安装器把 `specguard` 放到命令路径后，到被审核的 Java 仓库里运行。该仓库需要：
+
 - 可用的 `git`。
-- 一个夹具仓库：含 OpenSpec 变更、Maven 或 Gradle 构建文件，以及一小段已提交的 Java 变更。实现阶段把夹具放在 `tests/fixtures/`。
+- 一个 OpenSpec 变更，以及仓库根或 `--config` 指向的 `specguard.yaml`。
 - 验证静态模式时不需要模型服务。
 
-在 SpecGuard 仓库根目录安装开发依赖并确认测试入口可用之后，再运行下面的场景。
+SpecGuard 开发者才在本仓库的源码检出里安装开发依赖并运行测试。夹具放在 `tests/fixtures/`。下面的场景用这些夹具代替一个外部 Java 仓库。
 
 ## 1. 不启动审核的命令
 
 ```bash
 specguard version
 specguard --help
-specguard config validate --config tests/fixtures/valid-specguard.yaml
+specguard config validate --config tests/fixtures/single_change/specguard.yaml
 ```
 
 期望：三条命令都退出 `0`。前两条的输出没有报告文件。
