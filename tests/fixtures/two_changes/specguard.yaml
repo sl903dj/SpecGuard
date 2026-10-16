@@ -1,0 +1,26 @@
+version: 1
+project:
+  name: sample
+  root: "."
+openspec:
+  root: openspec
+  change: null
+  require_change_selection: true
+git:
+  base: main
+  target: HEAD
+review:
+  mode: static
+  policy: advisory
+  llm_findings_block: false
+checks:
+  build:
+    enabled: false
+    required: false
+llm:
+  enabled: false
+  external_fallback: false
+security:
+  isolate_builds: false
+report:
+  output_dir: .specguard/reports

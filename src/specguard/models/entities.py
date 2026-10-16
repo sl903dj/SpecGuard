@@ -1,0 +1,196 @@
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from specguard.models.status import CheckStatus, ReviewStatus
+
+DISCLAIMER = "缺少测试证据不等于代码一定有错；静态或自动检查未发现问题也不等于代码安全。"
+
+ChangeType = Literal["added", "modified", "deleted", "renamed"]
+Semantics = Literal["added", "modified", "removed"]
+EvidenceKind = Literal["direct", "inferred", "insufficient"]
+Claim = Literal["confirmed", "hypothesis", "insufficient"]
+Support = Literal["code", "test", "both", "none"]
+Severity = Literal["critical", "high", "medium", "low", "info"]
+Category = Literal[
+    "requirements",
+    "task_integrity",
+    "business_logic",
+    "test_adequacy",
+    "regression",
+]
+
+
+class _Model(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class LineRange(_Model):
+    start: int
+    end: int
+
+    @model_validator(mode="after")
+    def real_lines(self) -> "LineRange":
+        if self.start <= 0 or self.end <= 0:
+            raise ValueError("不得伪造行号")
+        return self
+
+
+class ChangedFile(_Model):
+    path: str
+    previous_path: str | None = None
+    change_type: ChangeType
+    line_ranges: list[LineRange] = Field(default_factory=list)
+    committed: bool = True
+
+
+class Location(_Model):
+    file: str
+    line_start: int
+    line_end: int
+
+    @model_validator(mode="after")
+    def real_lines(self) -> "Location":
+        if self.line_start <= 0 or self.line_end <= 0:
+            raise ValueError("不得伪造行号")
+        return self
+
+
+class Evidence(_Model):
+    status: EvidenceKind
+    requirement_id: str | None = None
+    task_id: str | None = None
+    file: str | None = None
+    line_start: int | None = None
+    line_end: int | None = None
+    check_id: str | None = None
+    note: str = ""
+
+    @model_validator(mode="after")
+    def note_when_uncertain(self) -> "Evidence":
+        if self.status in {"inferred", "insufficient"} and not self.note:
+            raise ValueError("推断和证据不足必须说明原因")
+        if self.line_start == 0 or self.line_end == 0:
+            raise ValueError("不得伪造行号")
+        return self
+
+
+class Scenario(_Model):
+    name: str
+    source_line: int
+
+
+class Requirement(_Model):
+    identifier: str
+    title: str
+    change_semantics: Semantics
+    scenarios: list[Scenario] = Field(default_factory=list)
+    source_file: str
+    source_line: int
+    body: str = ""
+    ambiguous: bool = False
+    ambiguity_reason: str | None = None
+    evidence: list[Evidence] = Field(default_factory=list)
+
+
+class TaskItem(_Model):
+    identifier: str
+    text: str
+    marked_complete: bool = False
+    source_file: str
+    source_line: int
+    support: Support = "none"
+    evidence: list[Evidence] = Field(default_factory=list)
+
+
+class CheckResult(_Model):
+    check_id: str
+    required: bool
+    status: CheckStatus
+    command: str | None = None
+    duration_seconds: float | None = None
+    exit_code: int | None = None
+    diagnostic: str | None = None
+    tool_version: str | None = None
+
+    def rewrite(self, proposed: CheckStatus) -> None:
+        from specguard.models.status import rewrite_status
+
+        self.status = rewrite_status(self.status, proposed)
+
+
+class Finding(_Model):
+    finding_id: str = ""
+    category: Category
+    severity: Severity
+    summary: str
+    failure_path: str | None = None
+    evidence_status: Claim
+    origin: str
+    location: Location | None = None
+    related_requirement_ids: list[str] = Field(default_factory=list)
+    related_task_ids: list[str] = Field(default_factory=list)
+    duplicate_group: str | None = None
+    attributes_cause: bool = False
+
+    def is_defect(self) -> bool:
+        return (
+            self.evidence_status == "confirmed"
+            and bool(self.failure_path)
+            and self.location is not None
+        )
+
+
+class PolicyView(_Model):
+    mode: Literal["advisory", "strict"]
+    blocked: bool
+    reasons: list[str] = Field(default_factory=list)
+
+
+class Metadata(_Model):
+    tool_version: str
+    config_version: int
+    repository_root: str
+    base: str
+    target: str
+    head_sha: str
+    change: str | None
+    started_at: str
+    finished_at: str
+    limitations: list[str] = Field(default_factory=list)
+    output_paths: list[str] = Field(default_factory=list)
+
+
+class Summary(_Model):
+    needs_human_review: bool
+    direct_count: int = 0
+    inferred_count: int = 0
+    insufficient_count: int = 0
+    task_gap_count: int = 0
+    highest_risks: list[str] = Field(default_factory=list)
+    reliable_checks: list[str] = Field(default_factory=list)
+    disclaimer: str = DISCLAIMER
+    coverage_percent: float | None = None
+
+
+class ArtifactReport(_Model):
+    available: bool = False
+    found: list[str] = Field(default_factory=list)
+    missing: list[str] = Field(default_factory=list)
+    selected_change: str | None = None
+    main_specs: list[str] = Field(default_factory=list)
+
+
+class ReviewReport(_Model):
+    schema_version: Literal["1.0"] = "1.0"
+    review_status: ReviewStatus
+    policy: PolicyView
+    metadata: Metadata
+    summary: Summary
+    changed_files: list[ChangedFile] = Field(default_factory=list)
+    requirements: list[Requirement] = Field(default_factory=list)
+    tasks: list[TaskItem] = Field(default_factory=list)
+    checks: list[CheckResult] = Field(default_factory=list)
+    findings: list[Finding] = Field(default_factory=list)
+    conflicts: list[list[str]] = Field(default_factory=list)
+    artifacts: ArtifactReport = Field(default_factory=ArtifactReport)

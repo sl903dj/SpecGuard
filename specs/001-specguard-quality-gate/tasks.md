@@ -28,10 +28,10 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 **Purpose**: 建立可测试的 Python 包，不包含审核行为
 
-- [ ] T001 按 plan.md 创建包目录 `src/specguard/{cli,config,models,git,openspec,project,checks,review,llm,report}` 和 `tests/{unit,integration,fixtures}`，并添加各目录的 `__init__.py`
-- [ ] T002 在 `pyproject.toml` 中声明 Python `>=3.11`、Typer、Pydantic v2、pytest、httpx，配置 `pytest` 的 `testpaths = ["tests"]`，并写明依赖版本在实现时按内网环境锁定
-- [ ] T003 [P] 在 `.gitignore` 中忽略 `.venv/`、`__pycache__/`、`.pytest_cache/` 和 `.specguard/reports/`
-- [ ] T004 [P] 在 `tests/conftest.py` 中添加夹具根路径 `tests/fixtures`，供后续故事复用
+- [X] T001 按 plan.md 创建包目录 `src/specguard/{cli,config,models,git,openspec,project,checks,review,llm,report}` 和 `tests/{unit,integration,fixtures}`，并添加各目录的 `__init__.py`
+- [X] T002 在 `pyproject.toml` 中声明 Python `>=3.11`、Typer、Pydantic v2、pytest、httpx，配置 `pytest` 的 `testpaths = ["tests"]`，并写明依赖版本在实现时按内网环境锁定
+- [X] T003 [P] 在 `.gitignore` 中忽略 `.venv/`、`__pycache__/`、`.pytest_cache/` 和 `.specguard/reports/`
+- [X] T004 [P] 在 `tests/conftest.py` 中添加夹具根路径 `tests/fixtures`，供后续故事复用
 
 ---
 
@@ -43,19 +43,19 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 ### Tests（先写，先失败）
 
-- [ ] T005 [P] 在 `tests/unit/test_config.py` 中编写失败测试：`version` 只接受 `1`；`review.llm_findings_block` 只接受 `false`；`llm.external_fallback` 只接受 `false`；未知字段、允许列表外命令、空的 `assisted` 模型地址使加载失败且不开始审核
-- [ ] T006 [P] 在 `tests/unit/test_report_paths.py` 中编写失败测试：`report.output_dir` 解析后必须仍在允许的报告根内；包含 `..` 逃逸、指向源文件或 Git 元数据的路径校验失败
-- [ ] T007 [P] 在 `tests/unit/test_status_models.py` 中编写失败测试：检查状态只能是 `PASS`、`FAIL`、`SKIPPED`、`ERROR`、`TIMEOUT` 之一，且 `SKIPPED`、`ERROR`、`TIMEOUT` 不能被写成 `PASS`；整次状态只能是 `REVIEW_COMPLETE`、`REVIEW_INCOMPLETE`、`POLICY_BLOCKED`
+- [X] T005 [P] 在 `tests/unit/test_config.py` 中编写失败测试：`version` 只接受 `1`；`review.llm_findings_block` 只接受 `false`；`llm.external_fallback` 只接受 `false`；未知字段、允许列表外命令、空的 `assisted` 模型地址使加载失败且不开始审核
+- [X] T006 [P] 在 `tests/unit/test_report_paths.py` 中编写失败测试：`report.output_dir` 解析后必须仍在允许的报告根内；包含 `..` 逃逸、指向源文件或 Git 元数据的路径校验失败
+- [X] T007 [P] 在 `tests/unit/test_status_models.py` 中编写失败测试：检查状态只能是 `PASS`、`FAIL`、`SKIPPED`、`ERROR`、`TIMEOUT` 之一，且 `SKIPPED`、`ERROR`、`TIMEOUT` 不能被写成 `PASS`；整次状态只能是 `REVIEW_COMPLETE`、`REVIEW_INCOMPLETE`、`POLICY_BLOCKED`
 
 ### Implementation
 
-- [ ] T008 在 `src/specguard/config/models.py` 中定义配置模型，拒绝未知字段。`review.policy` 只允许 `advisory` 或 `strict`，默认 `advisory`。`review.mode` 只允许 `static` 或 `assisted`，默认 `static`。`review.llm_findings_block` 在 v0.1 只接受 `false`
-- [ ] T009 在 `src/specguard/config/loader.py` 中加载 `specguard.yaml`，校验失败时返回用法错误且不执行检查，错误信息包含字段路径
-- [ ] T010 在 `src/specguard/config/allowlist.py` 中维护允许的构建、测试和已命名工具命令；列表外命令视为配置无效
-- [ ] T011 在 `src/specguard/report/paths.py` 中实现报告路径校验，拒绝逃逸出报告根、覆盖源文件或写入 Git 元数据的目标
-- [ ] T012 在 `src/specguard/models/status.py` 与 `src/specguard/models/entities.py` 中实现 `CheckResult`、`Evidence`、`Finding`、`ReviewPolicy`、`ReviewReport`。`Evidence.status` 只允许 `direct`、`inferred`、`insufficient`。`Finding.evidence_status` 只允许 `confirmed`、`hypothesis`、`insufficient`。`Finding.severity` 只允许 `critical`、`high`、`medium`、`low`、`info`
-- [ ] T013 在 `src/specguard/cli/exit_codes.py` 中定义退出码：`0` OK、`1` INTERNAL、`2` POLICY_BLOCKED、`3` INCOMPLETE、`4` USAGE
-- [ ] T014 在 `src/specguard/cli/main.py` 中实现 `version`、`--help` 和 `config validate`。前两者退出 `0` 且不运行审核；`config validate` 只校验配置
+- [X] T008 在 `src/specguard/config/models.py` 中定义配置模型，拒绝未知字段。`review.policy` 只允许 `advisory` 或 `strict`，默认 `advisory`。`review.mode` 只允许 `static` 或 `assisted`，默认 `static`。`review.llm_findings_block` 在 v0.1 只接受 `false`
+- [X] T009 在 `src/specguard/config/loader.py` 中加载 `specguard.yaml`，校验失败时返回用法错误且不执行检查，错误信息包含字段路径
+- [X] T010 在 `src/specguard/config/allowlist.py` 中维护允许的构建、测试和已命名工具命令；列表外命令视为配置无效
+- [X] T011 在 `src/specguard/report/paths.py` 中实现报告路径校验，拒绝逃逸出报告根、覆盖源文件或写入 Git 元数据的目标
+- [X] T012 在 `src/specguard/models/status.py` 与 `src/specguard/models/entities.py` 中实现 `CheckResult`、`Evidence`、`Finding`、`ReviewPolicy`、`ReviewReport`。`Evidence.status` 只允许 `direct`、`inferred`、`insufficient`。`Finding.evidence_status` 只允许 `confirmed`、`hypothesis`、`insufficient`。`Finding.severity` 只允许 `critical`、`high`、`medium`、`low`、`info`
+- [X] T013 在 `src/specguard/cli/exit_codes.py` 中定义退出码：`0` OK、`1` INTERNAL、`2` POLICY_BLOCKED、`3` INCOMPLETE、`4` USAGE
+- [X] T014 在 `src/specguard/cli/main.py` 中实现 `version`、`--help` 和 `config validate`。前两者退出 `0` 且不运行审核；`config validate` 只校验配置
 
 **Checkpoint**: 配置、状态和命令骨架可测。用户故事可以开始
 
@@ -71,18 +71,18 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T015 [P] [US1] 在 `tests/unit/test_git_readonly.py` 中编写失败测试：非版本库在检查前停止并给出可操作错误；无法解析的基线必须报错且不得替换成其他版本；实现不得调用 `add`、`commit`、`checkout`、`reset`、`merge` 或 `clean`
-- [ ] T016 [P] [US1] 在 `tests/unit/test_report_contract.py` 中编写失败测试：JSON `schema_version` 为 `"1.0"`；必填键缺失时使用 `null` 或空数组而不是省略；没有发现时仍列出实际执行的检查，并声明这不是“代码没有缺陷”；固定限制说明必须出现
-- [ ] T017 [P] [US1] 在 `tests/integration/test_us1_report.py` 中编写失败测试：一次审核同时写出 Markdown 和 JSON，章节包含需要人工审核、需求覆盖、潜在风险、证据定位；`metadata` 记录实际基线与目标；工作区除报告目录外干净
+- [X] T015 [P] [US1] 在 `tests/unit/test_git_readonly.py` 中编写失败测试：非版本库在检查前停止并给出可操作错误；无法解析的基线必须报错且不得替换成其他版本；实现不得调用 `add`、`commit`、`checkout`、`reset`、`merge` 或 `clean`
+- [X] T016 [P] [US1] 在 `tests/unit/test_report_contract.py` 中编写失败测试：JSON `schema_version` 为 `"1.0"`；必填键缺失时使用 `null` 或空数组而不是省略；没有发现时仍列出实际执行的检查，并声明这不是“代码没有缺陷”；固定限制说明必须出现
+- [X] T017 [P] [US1] 在 `tests/integration/test_us1_report.py` 中编写失败测试：一次审核同时写出 Markdown 和 JSON，章节包含需要人工审核、需求覆盖、潜在风险、证据定位；`metadata` 记录实际基线与目标；工作区除报告目录外干净
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] 在 `src/specguard/git/repository.py` 中实现版本库根识别、基线与目标解析，以及开始和结束时的 `head_sha` 指纹。`resolved_base` 与 `resolved_target` 必须写入报告，不得悄悄替换
-- [ ] T019 [US1] 在 `src/specguard/git/diff.py` 中实现变更文件列表。`change_type` 只允许 `added`、`modified`、`deleted`、`renamed`，并且必须来自 Git；`committed` 把已提交变更和未提交变更分开；默认不纳入工作区
-- [ ] T020 [P] [US1] 在 `src/specguard/report/markdown.py` 中按 `contracts/report.md` 写出必含章节和限制说明。不完整审核不得使用表示干净通过的标题
-- [ ] T021 [P] [US1] 在 `src/specguard/report/json_report.py` 中从同一 `ReviewReport` 写出 `schema_version` 为 `"1.0"` 的 JSON，不省略必填键
-- [ ] T022 [US1] 在 `src/specguard/pipeline.py` 和 `src/specguard/cli/review_command.py` 中把只读差异接到报告写出。尚无需求或检查时，对应章节标为不可用或未执行，不得宣称需求符合性通过
-- [ ] T023 [US1] 在 `src/specguard/pipeline.py` 中比较审核前后的 `head_sha`。指纹不一致时整次状态为 `REVIEW_INCOMPLETE`，退出码为 `3`
+- [X] T018 [US1] 在 `src/specguard/git/repository.py` 中实现版本库根识别、基线与目标解析，以及开始和结束时的 `head_sha` 指纹。`resolved_base` 与 `resolved_target` 必须写入报告，不得悄悄替换
+- [X] T019 [US1] 在 `src/specguard/git/diff.py` 中实现变更文件列表。`change_type` 只允许 `added`、`modified`、`deleted`、`renamed`，并且必须来自 Git；`committed` 把已提交变更和未提交变更分开；默认不纳入工作区
+- [X] T020 [P] [US1] 在 `src/specguard/report/markdown.py` 中按 `contracts/report.md` 写出必含章节和限制说明。不完整审核不得使用表示干净通过的标题
+- [X] T021 [P] [US1] 在 `src/specguard/report/json_report.py` 中从同一 `ReviewReport` 写出 `schema_version` 为 `"1.0"` 的 JSON，不省略必填键
+- [X] T022 [US1] 在 `src/specguard/pipeline.py` 和 `src/specguard/cli/review_command.py` 中把只读差异接到报告写出。尚无需求或检查时，对应章节标为不可用或未执行，不得宣称需求符合性通过
+- [X] T023 [US1] 在 `src/specguard/pipeline.py` 中比较审核前后的 `head_sha`。指纹不一致时整次状态为 `REVIEW_INCOMPLETE`，退出码为 `3`
 
 **Checkpoint**: User Story 1 可独立演示。报告诚实，仓库保持只读
 
@@ -96,16 +96,16 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T024 [P] [US2] 在 `tests/unit/test_openspec_parser.py` 中编写失败测试：解析 `ADDED`、`MODIFIED`、`REMOVED` 和任务勾选，并保留源文件与行号；多个进行中变更且未选择时失败；找不到 OpenSpec 时需求审核不可用
-- [ ] T025 [P] [US2] 在 `tests/unit/test_traceability.py` 中编写失败测试：`Evidence.status` 只允许 `direct`、`inferred`、`insufficient`；仅有文件重叠只能产生 `inferred`；已勾选且 `support` 为 `none` 的任务形成完整性缺口，不得标成实现错误；无法追溯的行为标成可能的擅自扩展并要求人工审核
-- [ ] T026 [P] [US2] 在 `tests/integration/test_us2_requirements.py` 中编写失败测试：删除的需求不自动成为缺陷；含糊需求带有 `ambiguity_reason`；工件缺失列表出现在报告的 `artifacts` 中
+- [X] T024 [P] [US2] 在 `tests/unit/test_openspec_parser.py` 中编写失败测试：解析 `ADDED`、`MODIFIED`、`REMOVED` 和任务勾选，并保留源文件与行号；多个进行中变更且未选择时失败；找不到 OpenSpec 时需求审核不可用
+- [X] T025 [P] [US2] 在 `tests/unit/test_traceability.py` 中编写失败测试：`Evidence.status` 只允许 `direct`、`inferred`、`insufficient`；仅有文件重叠只能产生 `inferred`；已勾选且 `support` 为 `none` 的任务形成完整性缺口，不得标成实现错误；无法追溯的行为标成可能的擅自扩展并要求人工审核
+- [X] T026 [P] [US2] 在 `tests/integration/test_us2_requirements.py` 中编写失败测试：删除的需求不自动成为缺陷；含糊需求带有 `ambiguity_reason`；工件缺失列表出现在报告的 `artifacts` 中
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] 在 `src/specguard/openspec/discover.py` 中定位 `openspec/`，枚举进行中变更。`openspec.require_change_selection` 为真且未选择时退出 `4`，不得自动挑选
-- [ ] T028 [US2] 在 `src/specguard/openspec/parser.py` 中解析 proposal、design、tasks 和增量规范。需求的 `change_semantics` 只允许 `added`、`modified`、`removed`。任务没有勾选标记时 `marked_complete` 为否，不猜测完成状态
-- [ ] T029 [US2] 在 `src/specguard/review/traceability.py` 中关联需求、任务和变更文件。`TaskItem.support` 只允许 `code`、`test`、`both`、`none`。没有关联时使用 `insufficient`
-- [ ] T030 [US2] 在 `src/specguard/report/markdown.py` 和 `src/specguard/report/json_report.py` 中写入需求覆盖计数、任务缺口和证据定位，并保持两种报告一致
+- [X] T027 [US2] 在 `src/specguard/openspec/discover.py` 中定位 `openspec/`，枚举进行中变更。`openspec.require_change_selection` 为真且未选择时退出 `4`，不得自动挑选
+- [X] T028 [US2] 在 `src/specguard/openspec/parser.py` 中解析 proposal、design、tasks 和增量规范。需求的 `change_semantics` 只允许 `added`、`modified`、`removed`。任务没有勾选标记时 `marked_complete` 为否，不猜测完成状态
+- [X] T029 [US2] 在 `src/specguard/review/traceability.py` 中关联需求、任务和变更文件。`TaskItem.support` 只允许 `code`、`test`、`both`、`none`。没有关联时使用 `insufficient`
+- [X] T030 [US2] 在 `src/specguard/report/markdown.py` 和 `src/specguard/report/json_report.py` 中写入需求覆盖计数、任务缺口和证据定位，并保持两种报告一致
 
 **Checkpoint**: User Story 1 和 User Story 2 都能独立验证。没有检查结果时，测试证据保持 `insufficient`
 
@@ -119,17 +119,17 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T031 [P] [US3] 在 `tests/unit/test_check_runner.py` 中编写失败测试：成功记录命令、耗时和退出码；失败保留不超过 `security.max_command_output_bytes` 的诊断；超时标为 `TIMEOUT` 并终止进程组；非必需工具缺失为 `SKIPPED`，必需工具缺失为 `ERROR`，两者都不是 `PASS`
-- [ ] T032 [P] [US3] 在 `tests/unit/test_java_project.py` 中编写失败测试：识别 Maven 与 Gradle 及 wrapper 和多模块；无法识别时说明限制；未配置命令时不猜测 `mvn test` 或 `gradle test`
-- [ ] T033 [P] [US3] 在 `tests/integration/test_us3_static_checks.py` 中编写失败测试：`--mode static` 不发起模型请求，辅助维度为 `SKIPPED`；必需检查失败或超时时退出码为 `3`
+- [X] T031 [P] [US3] 在 `tests/unit/test_check_runner.py` 中编写失败测试：成功记录命令、耗时和退出码；失败保留不超过 `security.max_command_output_bytes` 的诊断；超时标为 `TIMEOUT` 并终止进程组；非必需工具缺失为 `SKIPPED`，必需工具缺失为 `ERROR`，两者都不是 `PASS`
+- [X] T032 [P] [US3] 在 `tests/unit/test_java_project.py` 中编写失败测试：识别 Maven 与 Gradle 及 wrapper 和多模块；无法识别时说明限制；未配置命令时不猜测 `mvn test` 或 `gradle test`
+- [X] T033 [P] [US3] 在 `tests/integration/test_us3_static_checks.py` 中编写失败测试：`--mode static` 不发起模型请求，辅助维度为 `SKIPPED`；必需检查失败或超时时退出码为 `3`
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] 在 `src/specguard/checks/runner.py` 中执行允许列表内的子进程，强制超时、输出上限和进程组终止。状态一旦写出，不得改成另一种成功
-- [ ] T035 [US3] 在 `src/specguard/project/detect.py` 中识别 `pom.xml`、`build.gradle`、`build.gradle.kts` 和 wrapper，并列出模块。不得静默漏掉受影响模块
-- [ ] T036 [US3] 在 `src/specguard/checks/java.py` 中只执行配置里且位于允许列表中的构建与测试命令。启用但没有命令的必需检查为 `ERROR`，非必需为 `SKIPPED`
-- [ ] T037 [US3] 在 `src/specguard/checks/optional_tools.py` 中接入 Checkstyle、SpotBugs、PMD、JaCoCo、ArchUnit 和 `openspec validate`。工具不存在时按 `required` 标为 `ERROR` 或 `SKIPPED`
-- [ ] T038 [US3] 在 `src/specguard/pipeline.py` 中于静态模式下运行检查并把 `CheckResult` 写入报告。未配置辅助审查时四个辅助维度保持 `SKIPPED`。必需检查落入 `SKIPPED`、`ERROR` 或 `TIMEOUT` 时，整次状态为 `REVIEW_INCOMPLETE`
+- [X] T034 [US3] 在 `src/specguard/checks/runner.py` 中执行允许列表内的子进程，强制超时、输出上限和进程组终止。状态一旦写出，不得改成另一种成功
+- [X] T035 [US3] 在 `src/specguard/project/detect.py` 中识别 `pom.xml`、`build.gradle`、`build.gradle.kts` 和 wrapper，并列出模块。不得静默漏掉受影响模块
+- [X] T036 [US3] 在 `src/specguard/checks/java.py` 中只执行配置里且位于允许列表中的构建与测试命令。启用但没有命令的必需检查为 `ERROR`，非必需为 `SKIPPED`
+- [X] T037 [US3] 在 `src/specguard/checks/optional_tools.py` 中接入 Checkstyle、SpotBugs、PMD、JaCoCo、ArchUnit 和 `openspec validate`。工具不存在时按 `required` 标为 `ERROR` 或 `SKIPPED`
+- [X] T038 [US3] 在 `src/specguard/pipeline.py` 中于静态模式下运行检查并把 `CheckResult` 写入报告。未配置辅助审查时四个辅助维度保持 `SKIPPED`。必需检查落入 `SKIPPED`、`ERROR` 或 `TIMEOUT` 时，整次状态为 `REVIEW_INCOMPLETE`
 
 **Checkpoint**: 静态模式可以独立运行。到此为止，计划中的“先有确定性检查再谈模型”已经成立
 
@@ -143,14 +143,14 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T039 [P] [US4] 在 `tests/unit/test_risk_review.py` 中编写失败测试：业务逻辑疑点没有 `failure_path` 时不得写成缺陷；位置未知时 `location` 为 `null`，不得填 `0` 或假行号；既有测试失败不得在无证据时归因于当前变更
-- [ ] T040 [P] [US4] 在 `tests/unit/test_finding_normalization.py` 中编写失败测试：重复发现可以归组，但必须保留各自 `origin`；互相冲突的结论进入 `conflicts`，不得合成折中结果。`summary.reliable_checks` 只收录 `PASS` 或已确认 `FAIL`，不收录 `SKIPPED`、`ERROR`、`TIMEOUT`
+- [X] T039 [P] [US4] 在 `tests/unit/test_risk_review.py` 中编写失败测试：业务逻辑疑点没有 `failure_path` 时不得写成缺陷；位置未知时 `location` 为 `null`，不得填 `0` 或假行号；既有测试失败不得在无证据时归因于当前变更
+- [X] T040 [P] [US4] 在 `tests/unit/test_finding_normalization.py` 中编写失败测试：重复发现可以归组，但必须保留各自 `origin`；互相冲突的结论进入 `conflicts`，不得合成折中结果。`summary.reliable_checks` 只收录 `PASS` 或已确认 `FAIL`，不收录 `SKIPPED`、`ERROR`、`TIMEOUT`
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] 在 `src/specguard/review/risk.py` 中根据变更文件和可用上下文产生业务逻辑与回归发现。`Finding.category` 使用 `business_logic` 或 `regression`。模型尚未接入时，这些规则型发现的 `evidence_status` 为 `confirmed` 或 `insufficient`，不得假装来自模型
-- [ ] T042 [US4] 在 `src/specguard/review/ranking.py` 中按 `critical`、`high`、`medium`、`low`、`info` 排列 `summary.highest_risks`，并填写 `summary.reliable_checks`
-- [ ] T043 [US4] 在 `src/specguard/report/markdown.py` 与 `src/specguard/report/json_report.py` 中使用同一排序写出潜在风险。已有可靠证据的检查标为不必反复人工确认
+- [X] T041 [US4] 在 `src/specguard/review/risk.py` 中根据变更文件和可用上下文产生业务逻辑与回归发现。`Finding.category` 使用 `business_logic` 或 `regression`。模型尚未接入时，这些规则型发现的 `evidence_status` 为 `confirmed` 或 `insufficient`，不得假装来自模型
+- [X] T042 [US4] 在 `src/specguard/review/ranking.py` 中按 `critical`、`high`、`medium`、`low`、`info` 排列 `summary.highest_risks`，并填写 `summary.reliable_checks`
+- [X] T043 [US4] 在 `src/specguard/report/markdown.py` 与 `src/specguard/report/json_report.py` 中使用同一排序写出潜在风险。已有可靠证据的检查标为不必反复人工确认
 
 **Checkpoint**: 工程师可以只看报告摘要决定先审核哪里
 
@@ -164,13 +164,13 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T044 [P] [US5] 在 `tests/unit/test_test_adequacy.py` 中编写失败测试：测试命令成功不得把需求改成已满足；测试失败与测试未能执行必须分开；重要边界、反向场景或异常场景缺少证据时产生 `test_adequacy` 关注点；覆盖率不可用时不得写入百分比
+- [X] T044 [P] [US5] 在 `tests/unit/test_test_adequacy.py` 中编写失败测试：测试命令成功不得把需求改成已满足；测试失败与测试未能执行必须分开；重要边界、反向场景或异常场景缺少证据时产生 `test_adequacy` 关注点；覆盖率不可用时不得写入百分比
 
 ### Implementation for User Story 5
 
-- [ ] T045 [US5] 在 `src/specguard/checks/test_results.py` 中读取已配置测试命令产出的结果文件。文件不存在时标为不可用，不编造通过数或覆盖率
-- [ ] T046 [US5] 在 `src/specguard/review/test_adequacy.py` 中把测试结果关联到需求和变更路径。只含不能验证该需求的简单断言时，证据状态保持 `insufficient`，并生成测试有效性发现
-- [ ] T047 [US5] 在 `src/specguard/pipeline.py` 中把测试有效性发现写入报告，且不覆盖 User Story 2 已经标成证据不足的需求结论
+- [X] T045 [US5] 在 `src/specguard/checks/test_results.py` 中读取已配置测试命令产出的结果文件。文件不存在时标为不可用，不编造通过数或覆盖率
+- [X] T046 [US5] 在 `src/specguard/review/test_adequacy.py` 中把测试结果关联到需求和变更路径。只含不能验证该需求的简单断言时，证据状态保持 `insufficient`，并生成测试有效性发现
+- [X] T047 [US5] 在 `src/specguard/pipeline.py` 中把测试有效性发现写入报告，且不覆盖 User Story 2 已经标成证据不足的需求结论
 
 **Checkpoint**: 测试通过不再被报告表述成所有需求已满足
 
@@ -184,15 +184,15 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T048 [P] [US6] 在 `tests/unit/test_llm_client.py` 中编写失败测试：未配置时零网络请求且辅助维度为 `SKIPPED`；只允许配置的 `base_url` 主机；不可达或无法解析时该维度为 `ERROR`；`llm.external_fallback` 不能打开第二条线路
-- [ ] T049 [P] [US6] 在 `tests/unit/test_secret_redaction.py` 中编写失败测试：疑似密钥在送审前被遮盖；报告只记录已遮盖的次数和位置类别，不记录原文；源码中的审核指示不能把策略改成通过
+- [X] T048 [P] [US6] 在 `tests/unit/test_llm_client.py` 中编写失败测试：未配置时零网络请求且辅助维度为 `SKIPPED`；只允许配置的 `base_url` 主机；不可达或无法解析时该维度为 `ERROR`；`llm.external_fallback` 不能打开第二条线路
+- [X] T049 [P] [US6] 在 `tests/unit/test_secret_redaction.py` 中编写失败测试：疑似密钥在送审前被遮盖；报告只记录已遮盖的次数和位置类别，不记录原文；源码中的审核指示不能把策略改成通过
 
 ### Implementation for User Story 6
 
-- [ ] T050 [US6] 在 `src/specguard/llm/redact.py` 中遮盖常见密钥和令牌。`report.include_source_snippets` 默认 `false`；只有显式开启才允许短片段，且片段也要先遮盖
-- [ ] T051 [US6] 在 `src/specguard/llm/client.py` 中实现带超时和有限重试的内网 OpenAI 兼容客户端。`api_key_env` 只读取环境变量名，密钥不写入配置、日志或报告
-- [ ] T052 [US6] 在 `src/specguard/review/assisted.py` 中构造不超过 `llm.max_context_chars` 的变更上下文。没有确定性证据支持的模型发现，`evidence_status` 必须是 `hypothesis`
-- [ ] T053 [US6] 在 `src/specguard/pipeline.py` 中仅当 `--mode assisted` 且配置完整时调用模型。模型失败不得丢弃已完成的 `CheckResult`
+- [X] T050 [US6] 在 `src/specguard/llm/redact.py` 中遮盖常见密钥和令牌。`report.include_source_snippets` 默认 `false`；只有显式开启才允许短片段，且片段也要先遮盖
+- [X] T051 [US6] 在 `src/specguard/llm/client.py` 中实现带超时和有限重试的内网 OpenAI 兼容客户端。`api_key_env` 只读取环境变量名，密钥不写入配置、日志或报告
+- [X] T052 [US6] 在 `src/specguard/review/assisted.py` 中构造不超过 `llm.max_context_chars` 的变更上下文。没有确定性证据支持的模型发现，`evidence_status` 必须是 `hypothesis`
+- [X] T053 [US6] 在 `src/specguard/pipeline.py` 中仅当 `--mode assisted` 且配置完整时调用模型。模型失败不得丢弃已完成的 `CheckResult`
 
 **Checkpoint**: 静态模式仍然不需要模型。辅助审查失败时报告保持不完整或错误，而不是干净通过
 
@@ -206,12 +206,12 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 ### Tests for User Story 7 ⚠️
 
-- [ ] T054 [P] [US7] 在 `tests/unit/test_policy.py` 中编写失败测试：`advisory` 下 `blocked` 恒为否；`strict` 下只有 `evidence_status` 为 `confirmed` 且严重程度位于 `block_on` 的确定性失败才使 `blocked` 为真；模型假设不阻断；必需检查未完成时退出码取 `3` 而不是 `2`
+- [X] T054 [P] [US7] 在 `tests/unit/test_policy.py` 中编写失败测试：`advisory` 下 `blocked` 恒为否；`strict` 下只有 `evidence_status` 为 `confirmed` 且严重程度位于 `block_on` 的确定性失败才使 `blocked` 为真；模型假设不阻断；必需检查未完成时退出码取 `3` 而不是 `2`
 
 ### Implementation for User Story 7
 
-- [ ] T055 [US7] 在 `src/specguard/review/policy.py` 中实现 `ReviewPolicy`。`llm_findings_block` 保持为否。默认配置不得把策略改成阻断式合并门禁
-- [ ] T056 [US7] 在 `src/specguard/cli/review_command.py` 中按 `contracts/cli.md` 映射退出码：完成且未阻断为 `0`，严格阻断为 `2`，不完整为 `3`，用法错误为 `4`，未预期错误为 `1`
+- [X] T055 [US7] 在 `src/specguard/review/policy.py` 中实现 `ReviewPolicy`。`llm_findings_block` 保持为否。默认配置不得把策略改成阻断式合并门禁
+- [X] T056 [US7] 在 `src/specguard/cli/review_command.py` 中按 `contracts/cli.md` 映射退出码：完成且未阻断为 `0`，严格阻断为 `2`，不完整为 `3`，用法错误为 `4`，未预期错误为 `1`
 
 **Checkpoint**: 全部故事都可独立验证。默认路径仍是建议模式
 
@@ -221,11 +221,11 @@ description: "Task list for SpecGuard v0.1 change-quality review"
 
 **Purpose**: 夹具、隔离构建和 quickstart 抽查
 
-- [ ] T057 [P] 在 `tests/fixtures/` 中添加小型 Git 夹具：单变更 Java 样例、两个进行中变更、非法配置、无证据需求和已勾选但无支撑的任务
-- [ ] T058 [P] 在 `src/specguard/checks/isolate.py` 中实现 `security.isolate_builds: true` 时于临时副本执行构建。隔离失败时对应检查为 `ERROR`，不是 `PASS`
-- [ ] T059 [P] 在 `tests/integration/test_readonly_repository.py` 中断言审核前后业务源文件、OpenSpec 工件、Git 索引和提交历史一致
-- [ ] T060 [P] 在 `docs/report-interpretation.md` 中说明五种检查状态、三种整次状态，以及“证据不足不是缺陷、检查未发现问题不是安全”
-- [ ] T061 按 `specs/001-specguard-quality-gate/quickstart.md` 在 `tests/integration/test_quickstart.py` 中自动化场景 1 至 8，并记录场景 9 的人工抽查项
+- [X] T057 [P] 在 `tests/fixtures/` 中添加小型 Git 夹具：单变更 Java 样例、两个进行中变更、非法配置、无证据需求和已勾选但无支撑的任务
+- [X] T058 [P] 在 `src/specguard/checks/isolate.py` 中实现 `security.isolate_builds: true` 时于临时副本执行构建。隔离失败时对应检查为 `ERROR`，不是 `PASS`
+- [X] T059 [P] 在 `tests/integration/test_readonly_repository.py` 中断言审核前后业务源文件、OpenSpec 工件、Git 索引和提交历史一致
+- [X] T060 [P] 在 `docs/report-interpretation.md` 中说明五种检查状态、三种整次状态，以及“证据不足不是缺陷、检查未发现问题不是安全”
+- [X] T061 按 `specs/001-specguard-quality-gate/quickstart.md` 在 `tests/integration/test_quickstart.py` 中自动化场景 1 至 8，并记录场景 9 的人工抽查项
 
 ---
 

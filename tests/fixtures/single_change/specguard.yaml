@@ -1,0 +1,40 @@
+version: 1
+project:
+  name: sample
+  root: "."
+openspec:
+  root: openspec
+  change: add-order
+  include_main_specs: true
+  require_change_selection: true
+git:
+  base: main
+  target: HEAD
+  include_worktree: false
+  fail_on_uncommitted_changes: true
+review:
+  mode: static
+  policy: advisory
+  llm_findings_block: false
+checks:
+  build:
+    enabled: true
+    command: "./mvnw -q -DskipTests package"
+    timeout_seconds: 30
+    required: true
+  tests:
+    enabled: false
+    required: false
+llm:
+  enabled: false
+  external_fallback: false
+security:
+  isolate_builds: true
+  max_command_output_bytes: 2000
+  redact_secrets: true
+report:
+  formats:
+    - markdown
+    - json
+  output_dir: .specguard/reports
+  include_source_snippets: false

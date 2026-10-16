@@ -1,0 +1,10 @@
+version: 1
+git:
+  base: main
+review:
+  mode: static
+  policy: advisory
+  llm_findings_block: true
+llm:
+  enabled: false
+  external_fallback: false
