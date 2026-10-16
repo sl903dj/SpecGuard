@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from specguard.models.entities import ArtifactReport, Requirement, Scenario, TaskItem
+from specguard.models.entities import ArtifactReport, MainRequirement, Requirement, Scenario, TaskItem
 
 SECTION = {
     "ADDED Requirements": "added",
@@ -64,6 +64,26 @@ def parse_requirements(change: str, text: str, source: str) -> list[Requirement]
     return requirements
 
 
+def parse_main_requirements(text: str, source: str) -> list[MainRequirement]:
+    items: list[MainRequirement] = []
+    for match in REQ_RE.finditer(text):
+        title = match.group(1).strip()
+        body_end = len(text)
+        next_req = REQ_RE.search(text, match.end())
+        if next_req:
+            body_end = next_req.start()
+        body = text[match.end() : body_end].strip()
+        items.append(
+            MainRequirement(
+                title=title,
+                body=body,
+                source_file=source,
+                source_line=_line_of(text, match.start()),
+            )
+        )
+    return items
+
+
 def parse_tasks(text: str, source: str) -> list[TaskItem]:
     items: list[TaskItem] = []
     for match in TASK_RE.finditer(text):
@@ -114,10 +134,13 @@ def load_change(root: Path, change: str, include_main: bool) -> tuple[ArtifactRe
     else:
         missing.append("specs")
     main_specs: list[str] = []
+    main_requirements: list[MainRequirement] = []
     if include_main:
         main_root = root / "specs"
         if main_root.is_dir():
-            main_specs = [str(path) for path in sorted(main_root.glob("**/spec.md"))]
+            for path in sorted(main_root.glob("**/spec.md")):
+                main_specs.append(str(path))
+                main_requirements.extend(parse_main_requirements(path.read_text(encoding="utf-8"), str(path)))
     return (
         ArtifactReport(
             available=True,
@@ -125,6 +148,7 @@ def load_change(root: Path, change: str, include_main: bool) -> tuple[ArtifactRe
             missing=missing,
             selected_change=change,
             main_specs=main_specs,
+            main_requirements=main_requirements,
         ),
         requirements,
         tasks,

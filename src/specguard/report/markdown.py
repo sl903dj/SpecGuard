@@ -26,6 +26,11 @@ def render_markdown(report: ReviewReport) -> str:
     lines.append(f"- 仅有推断: {report.summary.inferred_count}")
     lines.append(f"- 证据不足: {report.summary.insufficient_count}")
     lines.append(f"- 任务完整性缺口: {report.summary.task_gap_count}")
+    for requirement in report.requirements:
+        if requirement.ambiguous and requirement.ambiguity_reason:
+            lines.append(f"- 含糊需求 {requirement.identifier}: {requirement.ambiguity_reason}")
+    for item in report.artifacts.main_requirements:
+        lines.append(f"- 长期规范 {item.title} @ {item.source_file}:{item.source_line}")
     lines.extend(["", "## 潜在风险", ""])
     if report.summary.highest_risks:
         for item in report.summary.highest_risks:
@@ -51,10 +56,28 @@ def render_markdown(report: ReviewReport) -> str:
         lines.append(
             f"- {check.check_id}: {check.status.value} command={check.command} duration={check.duration_seconds} exit={check.exit_code}"
         )
+    modules = ", ".join(report.metadata.modules) if report.metadata.modules else "无"
+    lines.append(f"识别到的构建模块: {modules}")
     if report.summary.reliable_checks:
         lines.append("")
         lines.append("已有可靠证据、不必反复人工确认的检查: " + ", ".join(report.summary.reliable_checks))
     lines.extend(["", "## 限制说明", "", DISCLAIMER, ""])
+    if report.summary.coverage_percent is None:
+        lines.append("覆盖率分析不可用。")
+    else:
+        lines.append(f"覆盖率: {report.summary.coverage_percent}")
+    for item in report.metadata.limitations:
+        lines.append(f"- {item}")
+    if report.metadata.service_id or report.metadata.model_id:
+        lines.append(
+            f"辅助审查服务: {report.metadata.service_id or ''} 模型: {report.metadata.model_id or ''}".rstrip()
+        )
+    for note in report.metadata.redactions:
+        lines.append(f"密钥遮盖 {note.category}: {note.count}")
+    if report.metadata.source_snippets:
+        lines.append("源码片段:")
+        for snippet in report.metadata.source_snippets:
+            lines.append(f"- {snippet}")
     if not report.findings:
         names = ", ".join(item.check_id for item in report.checks) or "无"
         lines.append(f"本次没有发现并不表示代码没有缺陷。实际执行的检查：{names}")

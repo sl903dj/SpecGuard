@@ -147,6 +147,11 @@ class PolicyView(_Model):
     reasons: list[str] = Field(default_factory=list)
 
 
+class RedactionNote(_Model):
+    category: str
+    count: int
+
+
 class Metadata(_Model):
     tool_version: str
     config_version: int
@@ -159,6 +164,11 @@ class Metadata(_Model):
     finished_at: str
     limitations: list[str] = Field(default_factory=list)
     output_paths: list[str] = Field(default_factory=list)
+    modules: list[str] = Field(default_factory=list)
+    redactions: list[RedactionNote] = Field(default_factory=list)
+    service_id: str | None = None
+    model_id: str | None = None
+    source_snippets: list[str] = Field(default_factory=list)
 
 
 class Summary(_Model):
@@ -173,12 +183,20 @@ class Summary(_Model):
     coverage_percent: float | None = None
 
 
+class MainRequirement(_Model):
+    title: str
+    body: str
+    source_file: str
+    source_line: int
+
+
 class ArtifactReport(_Model):
     available: bool = False
     found: list[str] = Field(default_factory=list)
     missing: list[str] = Field(default_factory=list)
     selected_change: str | None = None
     main_specs: list[str] = Field(default_factory=list)
+    main_requirements: list[MainRequirement] = Field(default_factory=list)
 
 
 class ReviewReport(_Model):

@@ -1,11 +1,17 @@
+import re
+
 from specguard.models.entities import CheckResult, Finding
 from specguard.models.status import CheckStatus
+
+COVERAGE = re.compile(r"(?i)(?:coverage|jacoco)[^%\n]{0,40}?(\d+(?:\.\d+)?)\s*%")
 
 
 def parse_test_result_file(text: str | None) -> dict | None:
     if text is None:
         return None
-    return {"raw_present": True, "coverage_percent": None, "body": text[:200]}
+    match = COVERAGE.search(text)
+    percent = float(match.group(1)) if match else None
+    return {"raw_present": True, "coverage_percent": percent, "body": text[:200]}
 
 
 def note_missing_results(check: CheckResult | None) -> Finding | None:

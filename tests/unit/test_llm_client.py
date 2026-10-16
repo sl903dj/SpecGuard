@@ -42,6 +42,42 @@ def test_malformed_output_is_an_error() -> None:
     assert "无法解析" in str(exc.value)
 
 
+def test_http_error_and_unusable_body_are_provider_errors() -> None:
+    def error_status(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, json={"error": "down"})
+
+    client = LlmClient(_config(), transport=httpx.MockTransport(error_status))
+    with pytest.raises(ProviderError) as exc:
+        client.post_review({})
+    assert "无法使用" in str(exc.value)
+
+    def error_body(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"error": "bad"})
+
+    client = LlmClient(_config(), transport=httpx.MockTransport(error_body))
+    with pytest.raises(ProviderError):
+        client.post_review({})
+
+
+def test_retries_same_host_and_sends_env_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SPECGUARD_API_KEY", "supersecretvalue")
+    calls: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        if len(calls) == 1:
+            return httpx.Response(503, json={"error": "busy"})
+        return httpx.Response(200, json={"findings": []})
+
+    client = LlmClient(_config(), transport=httpx.MockTransport(handler))
+    payload = client.post_review({"messages": []})
+    assert payload == {"findings": []}
+    assert len(calls) == 2
+    assert all(call.url.host == "internal-model.example" for call in calls)
+    assert calls[0].headers["authorization"] == "Bearer supersecretvalue"
+    assert "supersecretvalue" not in str(payload)
+
+
 def test_hallucinated_location_is_not_kept() -> None:
     findings = merge_llm_output(
         {

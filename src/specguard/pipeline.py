@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 from specguard import __version__
 from specguard.checks.isolate import isolated_root
@@ -17,6 +18,7 @@ from specguard.models.entities import (
     CheckResult,
     Finding,
     Metadata,
+    RedactionNote,
     PolicyView,
     ReviewReport,
     Summary,
@@ -27,6 +29,7 @@ from specguard.openspec.parser import load_change
 from specguard.report.json_report import render_json
 from specguard.report.markdown import render_markdown
 from specguard.report.paths import resolve_report_dir
+from specguard.report.snippets import limited_snippets
 from specguard.review.assisted import (
     build_context,
     error_dimensions,
@@ -36,7 +39,8 @@ from specguard.review.assisted import (
 )
 from specguard.review.policy import decide
 from specguard.review.ranking import assign_ids, conflicts_for, highest_risks, reliable_checks
-from specguard.review.risk import existing_test_failure_note, review_risks
+from specguard.llm.redact import merge_redactions, redact
+from specguard.review.risk import existing_test_failure_note, missing_logic_context, review_risks
 from specguard.review.test_adequacy import assess_tests
 from specguard.review.traceability import link_requirements, link_tasks
 from specguard.project.detect import detect_project
@@ -183,12 +187,32 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
             if missing and test_check.status != CheckStatus.PASS:
                 findings.append(missing)
     findings.extend(review_risks(changed, read_text))
+    limitations.extend(missing_logic_context(changed, read_text))
+    if config.checks.build.enabled or config.checks.tests.enabled:
+        limitations.append("构建和测试命令可能生成文件，并执行项目自带脚本。")
     coverage_available = any(item.check_id == "jacoco" and item.status == CheckStatus.PASS for item in checks)
-    extra, coverage = assess_tests(requirements, changed, read_text, test_check, coverage_available)
+    extra, _ignored_coverage = assess_tests(requirements, changed, read_text, test_check, coverage_available)
     findings.extend(extra)
+    parsed_results = parse_test_result_file(test_check.diagnostic if test_check and test_check.diagnostic else None)
+    coverage = parsed_results.get("coverage_percent") if parsed_results else None
+    if coverage is None:
+        limitations.append("覆盖率分析不可用")
+    service_id = None
+    model_id = None
+    redaction_notes: list[dict] = []
     if config.review.mode == "assisted":
         review_untrusted("\n".join(read_text(item.path) for item in changed), config.review)
-        context, truncated = build_context(changed, read_text, config.llm.max_context_chars)
+        service_id = urlparse(config.llm.base_url or "").netloc or None
+        model_id = config.llm.model
+        context, truncated, redaction_notes = build_context(changed, read_text, config.llm.max_context_chars)
+        main_blob = "\n".join(f"{item.title}\n{item.body}" for item in artifacts.main_requirements)
+        if main_blob:
+            cleaned_main, main_notes = redact(main_blob)
+            redaction_notes = merge_redactions([*redaction_notes, *main_notes])
+            context = f"{cleaned_main}\n{context}"
+            if len(context) > config.llm.max_context_chars:
+                context = context[: config.llm.max_context_chars]
+                truncated = True
         if truncated:
             limitations.append("辅助审查上下文已按上限截断")
         try:
@@ -248,6 +272,11 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
             started_at=started,
             finished_at=_now(),
             limitations=limitations,
+            modules=layout.modules,
+            redactions=[RedactionNote(category=item["category"], count=item["count"]) for item in redaction_notes],
+            service_id=service_id,
+            model_id=model_id,
+            source_snippets=limited_snippets(changed, read_text, config.report.include_source_snippets),
         ),
         summary=summary,
         changed_files=changed,

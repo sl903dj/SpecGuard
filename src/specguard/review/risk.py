@@ -6,7 +6,23 @@ from specguard.models.status import CheckStatus
 
 EMPTY_CATCH = re.compile(r"catch\s*\([^)]*\)\s*\{\s*\}")
 BOUNDARY = re.compile(r"<=\s*[\w.]+\.(?:size|length)\(\)")
-PUBLIC_METHOD = re.compile(r"^\s*public\s+[\w<>\[\], ?]+\s+\w+\s*\(")
+PUBLIC_METHOD = re.compile(r"^\s*public\s+[\w<>\[\], ?]+\s+(\w+)\s*\(")
+EMPTY_NULL = re.compile(r"if\s*\([^)]*==\s*null\s*\)\s*\{\s*\}")
+CONTEXT_MARKERS = (
+    "== null",
+    "setStatus",
+    "@Transactional",
+    "synchronized",
+    "PreAuthorize",
+    "HashMap",
+    "ConcurrentHashMap",
+    "@GetMapping",
+    "@PostMapping",
+    "@PutMapping",
+    "@DeleteMapping",
+    "@RequestMapping",
+    "RolesAllowed",
+)
 
 
 def _location(path: str, start: int | None, end: int | None) -> Location | None:
@@ -15,10 +31,119 @@ def _location(path: str, start: int | None, end: int | None) -> Location | None:
     return Location(file=path, line_start=start, line_end=end or start)
 
 
+def _line_of(text: str, needle: str) -> int | None:
+    index = text.find(needle)
+    if index < 0:
+        return None
+    return text.count("\n", 0, index) + 1
+
+
+def _insufficient(category: str, summary: str, path: str, line: int | None) -> Finding:
+    return Finding(
+        category=category,  # type: ignore[arg-type]
+        severity="medium",
+        summary=summary,
+        evidence_status="insufficient",
+        origin="risk",
+        location=_location(path, line, line),
+        failure_path=None,
+    )
+
+
+def _path_risks(changed: ChangedFile, text: str) -> list[Finding]:
+    name = changed.path.replace("\\", "/").rsplit("/", 1)[-1]
+    findings: list[Finding] = []
+    if name == "pom.xml" or name.startswith("build.gradle"):
+        findings.append(
+            _insufficient(
+                "regression",
+                "依赖或构建配置发生变化。这是假设，不是已核实的不兼容。",
+                changed.path,
+                None,
+            )
+        )
+    if name.endswith((".yml", ".yaml", ".properties")):
+        findings.append(
+            _insufficient(
+                "regression",
+                "应用配置发生变化。这是假设，不是已核实的不兼容。",
+                changed.path,
+                None,
+            )
+        )
+    if name.endswith(".sql") or "@Entity" in text or "@Table" in text:
+        line = _line_of(text, "@Entity") or _line_of(text, "@Table")
+        findings.append(
+            _insufficient(
+                "regression",
+                "数据保存或数据结构发生变化。这是假设，不是已核实的不兼容。",
+                changed.path,
+                line,
+            )
+        )
+    return findings
+
+
+def _context_findings(path: str, text: str) -> list[Finding]:
+    findings: list[Finding] = []
+    mappings = ("@RequestMapping", "@GetMapping", "@PostMapping", "@PutMapping", "@DeleteMapping")
+    if any(token in text for token in mappings) and not any(
+        token in text for token in ("PreAuthorize", "RolesAllowed", "SecurityContext")
+    ):
+        line = next((_line_of(text, token) for token in mappings if token in text), None)
+        findings.append(
+            _insufficient(
+                "business_logic",
+                "可见接口映射，但本次变更里看不到授权检查。这不是已核实的授权缺陷。",
+                path,
+                line,
+            )
+        )
+    if re.search(r"\bsave\s*\(", text) and "@Transactional" not in text:
+        findings.append(
+            _insufficient(
+                "business_logic",
+                "可见保存操作，但本次变更里看不到事务边界。这不是已核实的事务缺陷。",
+                path,
+                _line_of(text, "save"),
+            )
+        )
+    if re.search(r"\bHashMap\s*<", text) and "ConcurrentHashMap" not in text and "synchronized" not in text:
+        findings.append(
+            _insufficient(
+                "business_logic",
+                "可见共享可变映射，但本次变更里看不到并发控制。这不是已核实的并发缺陷。",
+                path,
+                _line_of(text, "HashMap"),
+            )
+        )
+    if "setStatus(" in text and not re.search(r"if\s*\(", text):
+        findings.append(
+            _insufficient(
+                "business_logic",
+                "看到状态写入，但看不到转移条件。这不是已核实的状态缺陷。",
+                path,
+                _line_of(text, "setStatus("),
+            )
+        )
+    return findings
+
+
+def missing_logic_context(changed_files: list[ChangedFile], read_text) -> list[str]:
+    blob = "\n".join((read_text(item.path) if read_text else "") for item in changed_files)
+    if any(marker in blob for marker in CONTEXT_MARKERS):
+        return []
+    return [
+        "变更里看不到状态流转、空值与空输入、事务边界、并发或授权的足够上下文，未将这些方面标成已确认缺陷。"
+    ]
+
+
 def review_risks(changed_files: list[ChangedFile], read_text) -> list[Finding]:
     findings: list[Finding] = []
     for changed in changed_files:
         text = read_text(changed.path) if read_text else ""
+        findings.extend(_path_risks(changed, text))
+        findings.extend(_context_findings(changed.path, text))
         lines = text.splitlines()
         ranges = changed.line_ranges or []
         numbers = []
@@ -40,6 +165,18 @@ def review_risks(changed_files: list[ChangedFile], read_text) -> list[Finding]:
             if number <= 0 or number > len(lines):
                 continue
             line = lines[number - 1]
+            if EMPTY_NULL.search(line):
+                findings.append(
+                    Finding(
+                        category="business_logic",
+                        severity="high",
+                        summary="空的空值判断会忽略空输入",
+                        failure_path="空值被忽略后，后续逻辑会按已有数据继续执行。",
+                        evidence_status="confirmed",
+                        origin="risk",
+                        location=_location(changed.path, number, number),
+                    )
+                )
             if EMPTY_CATCH.search(line):
                 findings.append(
                     Finding(
@@ -64,12 +201,25 @@ def review_risks(changed_files: list[ChangedFile], read_text) -> list[Finding]:
                         location=_location(changed.path, number, number),
                     )
                 )
-            if PUBLIC_METHOD.search(line):
+            method = PUBLIC_METHOD.search(line)
+            if method:
+                name = method.group(1)
+                callers = [
+                    other.path
+                    for other in changed_files
+                    if other.path != changed.path and name and name in (read_text(other.path) if read_text else "")
+                ]
+                caller_note = (
+                    f" 本次变更中可见调用方 {callers[0]}。"
+                    if callers
+                    else " 本次变更中未找到调用方。"
+                )
                 findings.append(
                     Finding(
                         category="regression",
                         severity="medium",
-                        summary="公开方法签名发生变化，存在潜在的兼容性风险",
+                        summary="公开方法签名发生变化，存在潜在的兼容性风险。这是假设，不是已核实的不兼容。"
+                        + caller_note,
                         evidence_status="insufficient",
                         origin="risk",
                         location=_location(changed.path, number, number),

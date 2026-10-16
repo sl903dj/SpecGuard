@@ -1,5 +1,5 @@
 from specguard.config.models import ReviewConfig
-from specguard.llm.redact import redact
+from specguard.llm.redact import merge_redactions, redact
 from specguard.models.entities import ChangedFile, CheckResult, Finding
 from specguard.models.status import CheckStatus
 
@@ -35,16 +35,19 @@ def error_dimensions(message: str) -> list[CheckResult]:
     ]
 
 
-def build_context(files: list[ChangedFile], read_text, max_chars: int) -> tuple[str, bool]:
+def build_context(files: list[ChangedFile], read_text, max_chars: int) -> tuple[str, bool, list[dict]]:
     chunks: list[str] = []
+    notes: list[dict] = []
     for item in files:
         text = read_text(item.path) if read_text else ""
-        cleaned, _notes = redact(text)
+        cleaned, file_notes = redact(text)
+        notes.extend(file_notes)
         chunks.append(f"## {item.path}\n{cleaned}")
     raw = "\n".join(chunks)
+    merged = merge_redactions(notes)
     if len(raw) <= max_chars:
-        return raw, False
-    return raw[:max_chars], True
+        return raw, False, merged
+    return raw[:max_chars], True, merged
 
 
 def review_untrusted(source: str, policy: ReviewConfig) -> ReviewConfig:

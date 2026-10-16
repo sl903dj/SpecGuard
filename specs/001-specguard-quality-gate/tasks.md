@@ -366,3 +366,26 @@ Task: "T054 tests/unit/test_policy.py"
 - 先确认测试失败，再写实现
 - 不得通过删除测试、削弱断言或忽略失败来勾选任务
 - 证据不足不得写成代码一定有错；检查未发现问题不得写成代码安全
+
+---
+
+## Phase 11: Convergence
+
+- [X] T062 CRITICAL：在执行构建或测试时，把“这些命令可能生成文件并执行项目自带脚本”写进报告限制说明 per Constitution 安全与范围 (partial)
+- [X] T063 把 `detect_project` 识别到的构建模块写入 Markdown 和 JSON 报告，不得只留在内存里 per US3/AC6 (partial)
+- [X] T064 当关联测试只有不能验证该需求的简单断言时，保持需求证据为 `insufficient`，并生成指向该测试和需求的 `test_adequacy` 发现 per US5/AC4 (partial)
+- [X] T065 遮盖送审内容后，把遮盖次数和位置类别写入报告，且不写入密钥原文 per US6/AC5 (partial)
+- [X] T066 对状态流转、空值与空输入、事务边界、并发和授权做证据化审核；上下文不可用时写入限制，且没有失败路径时不得标成已确认缺陷 per FR-021 (partial)
+- [X] T067 评估公开接口、调用方、数据保存、依赖和配置变化，并区分已核实的不兼容与假设 per FR-026 (partial)
+- [X] T068 在 `include_main_specs` 为真时解析长期规范内容并纳入审核上下文，而不是只记录文件路径 per FR-006 (partial)
+- [X] T069 读取测试命令实际产出的结果；没有结果或覆盖率时，在报告中标明覆盖率分析不可用，且不写入百分比 per FR-025 (partial)
+- [X] T070 在人类可读报告中写明含糊需求的 `ambiguity_reason` per US2/AC4 (partial)
+- [X] T071 在辅助审查可得时，把已配置的服务标识和模型标识写入报告 per US6/AC1 (partial)
+
+---
+
+## Phase 12: Convergence
+
+- [X] T072 模型返回非成功状态或无法作为审核结果使用时，把四个辅助维度标为 `ERROR`，并保留已完成的确定性检查 per US6/AC3 (partial)
+- [X] T073 只对已配置的内部主机做有限次重试，并用 `api_key_env` 指向的环境变量认证，且不把密钥写入报告 per plan: llm client (partial)
+- [X] T074 仅当 `report.include_source_snippets` 为真时写入已经遮盖的短源码片段；关闭时报告不包含源码摘录 per plan: report contract (partial)
