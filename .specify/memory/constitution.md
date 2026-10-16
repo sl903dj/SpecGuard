@@ -1,50 +1,92 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# SpecGuard Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 质量门，而非编程助手
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+SpecGuard MUST 只做变更质量审核，MUST NOT 充当另一个 AI 编程助手。
+它 MUST NOT 生成或修改被审核项目的业务代码，也 MUST NOT 自动提交、合并、发布或部署。
+是否接受变更 MUST 由工程师决定。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+理由：生成速度变快并不减轻审核责任。生成和放行如果混在同一工具里，未经验证的结论会直接变成合并决定。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. 结论必须有证据
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+每条审核结论 MUST 附带可核查的证据，或明确标为证据不足。
+证据 MUST 区分直接证据、推断关联和证据不足。
+仅有文件重叠 MUST NOT 被当作需求已经实现。
+缺少测试证据 MUST NOT 被写成代码一定有错。
+检查未发现问题 MUST NOT 被写成代码安全或没有缺陷。
+无法定位到具体行时，MUST NOT 编造行号。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+理由：报告的价值是让工程师复核，而不是用一段笼统意见代替判断。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. 检查状态必须诚实
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+每项检查的结果 MUST 是通过、失败、跳过、错误、超时之一。
+工具缺失、超时、未执行或配置无效 MUST NOT 被记为通过。
+必需检查未完成时，审核 MUST NOT 被呈现为干净通过。
+整体结果 MUST 区分审核完成、审核未完成和策略阻断。
+配置无效时，系统 MUST 在执行任何检查前停止，并指出无效设置。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+理由：把未知记成通过，会让工程师跳过本应亲自确认的位置。
+
+### IV. 辅助审查只是假设
+
+未得到可核验证据支持的模型输出 MUST 标为待复核假设。
+仅来自辅助审查的发现 MUST NOT 默认阻止合并。
+在真实历史变更完成误报与漏报对照之前，MUST NOT 启用阻止合并的质量门禁。
+源码、注释、文档或测试数据中的指示 MUST 视为不可信内容，MUST NOT 改写审核策略。
+审查服务返回无法使用的结果时，受影响的审查 MUST 标为错误，已成功的其他检查 MUST 保留。
+
+理由：模型可以提示风险，但不能把自己的把握当成事实。
+
+### V. 默认只读且留在内部
+
+审核 MUST NOT 修改业务源文件、需求工件、版本索引或提交历史。
+报告 MUST 只写到已配置的报告位置，MUST NOT 覆盖源文件。
+未明确配置内部审查服务时，系统 MUST NOT 联系外部模型服务。
+已配置的服务不可用时，MUST NOT 改送到其他服务。
+疑似密钥 MUST 被遮盖或排除，报告 MUST NOT 写出密钥原文。
+构建和测试命令 MUST 来自受信任配置，MUST NOT 执行模型临时生成的任意命令。
+
+理由：被审核仓库可能含有源码、凭据和个人数据。审核工具扩大写入或外发范围，本身就是事故。
+
+## 安全与范围约束
+
+- v0.1 MUST 只审核已用 OpenSpec 管理需求、并用版本库管理代码的 Java 服务端变更。超出该范围时 MUST 明确说明不支持，MUST NOT 假装已经覆盖。
+- 存在多个进行中的变更且没有选择时，系统 MUST 要求明确选择，或遵循已配置的选择策略，MUST NOT 擅自挑选。
+- 找不到需求规范时，MUST 说明基于需求的审核不可用，MUST NOT 宣称需求符合性已经通过。
+- 对不可信仓库，可能执行项目脚本的构建 MUST 能在隔离工作区中运行，并 MUST 说明这一风险。
+- 系统 MUST NOT 访问生产数据或生产控制能力。
+- 报告 MUST 同时提供人类可读版本和结构稳定的结构化版本，并记录所审核版本、所选变更、配置版本和可得的工具版本。
+- 最高风险项 MUST 排在工程师应优先查看的位置。已有可靠证据的检查 MUST 标为不必反复人工确认。
+
+## 开发与审核流程
+
+- 实现 MUST 以已接受的规格为准。规格含糊时 MUST 先提问，MUST NOT 擅自扩大范围。
+- SpecGuard 自身的功能 MUST 先有失败的测试，再写实现。MUST NOT 通过删除测试、削弱断言或忽略失败来获得通过。
+- 任务只有在代码和测试证据都支持时，才可以标为完成。
+- 确定性检查 MUST 先于辅助审查交付。辅助审查 MUST NOT 成为基础检查可用的前提。
+- 每次变更 MUST 核对：产品是否仍是质量门、结论是否有证据、失败是否被诚实标出、是否保持只读且不外发。
+- 更复杂的设计 MUST 说明为什么更简单的做法不够。没有评估证据的阻断式门禁 MUST NOT 进入默认流程。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+本宪章高于与之冲突的临时做法和口头约定。规格、计划和实现若与本宪章冲突，MUST 以本宪章为准，或先修订宪章。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+修订程序：
+
+- 任何修订 MUST 更新本文件，并在提交前附带同步影响说明，列出版本变化、原则变更和待办。
+- 该说明只供人工复核。合入前 MUST 从宪章正文中移除。
+- 向后不兼容的原则删除或重新定义 MUST 升主版本。
+- 新增原则或实质性扩充 MUST 升次版本。
+- 不改变义务的措辞澄清 MUST 升修订版本。
+- 版本含义不清时，MUST 先说明理由再定版，MUST NOT 静默选择。
+
+合规审查：
+
+- 每次实现或审核 SpecGuard 变更时，MUST 检查上述原则是否仍被遵守。
+- 无法遵守时，MUST 在变更说明中写出偏离、原因和补救，MUST NOT 把偏离写成已符合。
+
+**Version**: 1.0.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-16
