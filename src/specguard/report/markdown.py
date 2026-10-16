@@ -48,7 +48,11 @@ def render_markdown(report: ReviewReport) -> str:
     if not report.findings and not report.requirements:
         lines.append("当前没有可定位的需求或发现。")
     for finding in report.findings:
-        lines.append(f"- {finding.finding_id}: 来源 {finding.origin}")
+        if finding.location is None:
+            place = "位置不可用"
+        else:
+            place = f"{finding.location.file}:{finding.location.line_start}"
+        lines.append(f"- {finding.finding_id}: 来源 {finding.origin} @ {place}")
     for requirement in report.requirements:
         status = requirement.evidence[-1].status if requirement.evidence else "insufficient"
         lines.append(f"- 需求 {requirement.identifier}: {status} @ {requirement.source_file}:{requirement.source_line}")

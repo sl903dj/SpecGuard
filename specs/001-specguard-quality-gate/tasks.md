@@ -396,3 +396,9 @@ Task: "T054 tests/unit/test_policy.py"
 
 - [X] T075 在 Markdown 的潜在风险中写出失败路径；没有失败路径时标明不可用，不得编造 per US4/AC1 (partial)
 - [X] T076 在 Markdown 的检查结果中写出有限度的诊断摘要，并与 JSON 中的 `diagnostic` 一致 per plan: report contract (partial)
+
+---
+
+## Phase 14: Convergence
+
+- [X] T077 在 Markdown 的证据定位中写明已有发现的文件和行；没有位置时标明不可用，不得编造行号 per US1/AC6 (partial)

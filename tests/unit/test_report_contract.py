@@ -2,6 +2,7 @@ from specguard.models.entities import (
     DISCLAIMER,
     CheckResult,
     Finding,
+    Location,
     Metadata,
     PolicyView,
     ReviewReport,
@@ -78,6 +79,7 @@ def test_markdown_risks_and_checks_match_json_fields() -> None:
             failure_path="异常被空 catch 吃掉后，调用方会以为操作已经成功。",
             evidence_status="confirmed",
             origin="risk",
+            location=Location(file="src/Order.java", line_start=4, line_end=4),
         ),
         Finding(
             finding_id="SG-regression-2",
@@ -104,6 +106,8 @@ def test_markdown_risks_and_checks_match_json_fields() -> None:
     assert "异常被空 catch 吃掉后，调用方会以为操作已经成功。" in text
     assert "SG-regression-2 依赖变化未被核实" in text
     assert "失败路径不可用" in text
+    assert "SG-business_logic-1: 来源 risk @ src/Order.java:4" in text
+    assert "SG-regression-2: 来源 risk @ 位置不可用" in text
     assert "diagnostic=COMPILATION ERROR" in text
     assert payload["checks"][0]["diagnostic"] == "COMPILATION ERROR"
     assert payload["findings"][1]["failure_path"] is None
