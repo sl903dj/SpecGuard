@@ -38,7 +38,10 @@ def render_markdown(report: ReviewReport) -> str:
             place = "位置不可用" if finding.location is None else (
                 f"{finding.location.file}:{finding.location.line_start}"
             )
-            lines.append(f"- {finding.finding_id} {finding.summary} ({place}, {finding.evidence_status})")
+            path = finding.failure_path or "失败路径不可用"
+            lines.append(
+                f"- {finding.finding_id} {finding.summary} ({place}, {finding.evidence_status}, {path})"
+            )
     else:
         lines.append("没有形成风险条目。")
     lines.extend(["", "## 证据定位", ""])
@@ -53,8 +56,9 @@ def render_markdown(report: ReviewReport) -> str:
     if not report.checks:
         lines.append("实际执行的检查：无")
     for check in report.checks:
+        diagnostic = check.diagnostic if check.diagnostic else "诊断不可用"
         lines.append(
-            f"- {check.check_id}: {check.status.value} command={check.command} duration={check.duration_seconds} exit={check.exit_code}"
+            f"- {check.check_id}: {check.status.value} command={check.command} duration={check.duration_seconds} exit={check.exit_code} diagnostic={diagnostic}"
         )
     modules = ", ".join(report.metadata.modules) if report.metadata.modules else "无"
     lines.append(f"识别到的构建模块: {modules}")

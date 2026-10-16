@@ -389,3 +389,10 @@ Task: "T054 tests/unit/test_policy.py"
 - [X] T072 模型返回非成功状态或无法作为审核结果使用时，把四个辅助维度标为 `ERROR`，并保留已完成的确定性检查 per US6/AC3 (partial)
 - [X] T073 只对已配置的内部主机做有限次重试，并用 `api_key_env` 指向的环境变量认证，且不把密钥写入报告 per plan: llm client (partial)
 - [X] T074 仅当 `report.include_source_snippets` 为真时写入已经遮盖的短源码片段；关闭时报告不包含源码摘录 per plan: report contract (partial)
+
+---
+
+## Phase 13: Convergence
+
+- [X] T075 在 Markdown 的潜在风险中写出失败路径；没有失败路径时标明不可用，不得编造 per US4/AC1 (partial)
+- [X] T076 在 Markdown 的检查结果中写出有限度的诊断摘要，并与 JSON 中的 `diagnostic` 一致 per plan: report contract (partial)
