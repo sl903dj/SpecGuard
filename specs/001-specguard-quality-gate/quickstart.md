@@ -4,7 +4,24 @@
 
 ## 前提
 
-使用者不克隆 SpecGuard 源码。安装器把 `specguard` 放到命令路径后，到被审核的 Java 仓库里运行。该仓库需要：
+使用者不把 SpecGuard 源码克隆进被审核仓库。`specguard` 不在 PyPI，不要运行 `uv tool install specguard`。从 GitHub 安装时，安装器把源码放进自己的工具环境：
+
+```bash
+uv tool install "git+https://github.com/sl903dj/SpecGuard"
+```
+
+验证本地源码时，把 `<checkout>` 换成这个源码检出的绝对路径，并在一个新建目录里运行已安装的命令：
+
+```bash
+uv tool install --force <checkout>
+mkdir -p /tmp/specguard-install-check
+cd /tmp/specguard-install-check
+specguard version
+```
+
+期望：该目录里没有 `src/specguard`；`specguard version` 退出码为 `0`，输出 `0.1.0`。这只证明命令能从本地源码装上并在源码树外运行。
+
+安装器把 `specguard` 放到命令路径后，到被审核的 Java 仓库里运行。该仓库需要：
 
 - 可用的 `git`。
 - 一个 OpenSpec 变更，以及仓库根或 `--config` 指向的 `specguard.yaml`。

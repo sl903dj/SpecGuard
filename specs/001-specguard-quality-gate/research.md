@@ -8,6 +8,12 @@
 - **Rationale**: 本机的 `specify` 是 `~/.local/bin/specify`，指向 uv 工具环境里的 Python 入口脚本，不是把 Spec Kit 源码克隆进当前项目后再运行。审核工具若要求先克隆再运行，就会把工具源码混进被审核仓库，和只读质量门的用法相反。
 - **Alternatives considered**: 要求 `git clone` 后在源码树里运行，只适合 SpecGuard 开发者。用 Go 或打包器做成单个原生二进制可以去掉对 Python 的依赖，但 Spec Kit 本身也不是这种二进制，v0.1 没有额外理由更换实现语言。
 
+## Decision: 从 GitHub 安装，不用 PyPI 包名
+
+- **Decision**: `specguard` 没有发布到 PyPI。使用者安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。安装器把仓库拉进 uv 的工具环境，不把检出放进被审核仓库。验证本地源码能否安装：在源码检出上执行 `uv tool install --force <本仓库绝对路径>`，然后进入一个新建的、不含 `src/specguard` 的目录，运行 `specguard version`。期望退出码为 0，输出 `0.1.0`。
+- **Rationale**: `uv tool install specguard` 会向默认索引查找包名。包不在 PyPI 时这条命令失败，不能写成安装说明。从 Git 地址安装与 Spec Kit 的 uv 工具安装方式相同，同时保留“被审核仓库里没有 SpecGuard 源码”的边界。本地路径安装使用同一安装器，用来在远程还不存在时证明控制台脚本可以被装上并在源码树外运行。
+- **Alternatives considered**: 继续写 `uv tool install specguard` 会被索引拒绝。先发布到 PyPI 才能使用包名，但 v0.1 没有选定公开索引。只在源码树里用 `python -m specguard` 不能证明命令已安装到 PATH。`--editable` 安装仍指向源码目录，不能代替一次非可编辑安装。
+
 ## Decision: 用 Python 3.11 实现只读 CLI
 
 - **Decision**: SpecGuard 本体使用 Python 3.11 或更高版本，作为本地命令行工具发布。审核对象仍是 Java / Spring Boot 仓库，SpecGuard 不因此改用 Java。

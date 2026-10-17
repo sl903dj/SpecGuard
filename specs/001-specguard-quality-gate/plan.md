@@ -1,6 +1,6 @@
 # Implementation Plan: SpecGuard 变更质量守卫
 
-**Branch**: `001-specguard-quality-gate` | **Date**: 2026-10-16 | **Spec**: [spec.md](spec.md)
+**Branch**: `001-specguard-quality-gate` | **Date**: 2026-10-17 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `/specs/001-specguard-quality-gate/spec.md`
 
@@ -12,7 +12,7 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 技术路径：Python 3.11 命令行工具先读取 Git 差异和 OpenSpec，再执行配置中允许的构建与测试，最后才可选地调用内网模型。模型输出在有确定性证据之前只算假设。默认策略是建议模式，不自动合并，也不在历史变更对照完成前充当阻止合并的门禁。选择和理由见 [research.md](research.md)。
 
-使用者把 `specguard` 安装到本机命令路径，再到被审核的 Java 仓库里运行。不把 SpecGuard 源码克隆进该仓库。这与 Spec Kit 的 `specify` 相同：命令来自安装器，项目里不保留工具源码。v0.1 的安装入口是 Python 控制台脚本，不要求单独交付一个原生二进制。SpecGuard 自己的开发和测试仍使用本仓库的源码检出。
+使用者把 `specguard` 安装到本机命令路径，再到被审核的 Java 仓库里运行。不把 SpecGuard 源码克隆进该仓库。包不在 PyPI，所以不能使用 `uv tool install specguard`。GitHub 仓库是 `sl903dj/SpecGuard`，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`；安装器把源码拉进自己的工具环境。验证本地源码时，用源码检出的绝对路径执行 `uv tool install --force`，再到一个不含 `src/specguard` 的目录运行 `specguard version`。v0.1 的安装入口是 Python 控制台脚本，不要求单独交付一个原生二进制。SpecGuard 自己的开发和测试仍使用本仓库的源码检出。
 
 交付顺序固定为：配置与报告模型、只读 Git 与 OpenSpec 解析、确定性检查、证据追溯、报告与退出码、内网辅助审查、严格策略信号。辅助审查不能成为前面各步可用的前提。
 
@@ -28,11 +28,11 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 **Target Platform**: 工程师的 Linux 本地环境，以及以后可以调用同一命令的内网持续集成作业。v0.1 不提供网页。使用者安装 `specguard` 命令；被审核仓库只放 `specguard.yaml` 和它自己的源码。
 
-**Project Type**: 只读命令行工具。审核对象是使用 OpenSpec 和 Git 的 Java / Spring Boot 仓库。分发方式对齐 Spec Kit：安装命令，不在目标项目里拉取工具源码。
+**Project Type**: 只读命令行工具。审核对象是使用 OpenSpec 和 Git 的 Java / Spring Boot 仓库。分发方式对齐 Spec Kit：安装命令，不在目标项目里拉取工具源码。安装来源是 GitHub 仓库地址，不是 PyPI 包名。
 
 **Performance Goals**: 不含构建和测试时，一次普通服务变更的仓库与需求解析在 30 秒内完成。构建和测试分别服从配置超时，示例上限为构建 600 秒、测试 900 秒。模型上下文默认不超过 50000 个字符。
 
-**Constraints**: 不修改被审核仓库的源文件、OpenSpec 和 Git 历史。使用者不需要克隆 SpecGuard 源码才能审核。配置无效时在检查前退出。检查状态只能是通过、失败、跳过、错误或超时。未配置内部模型时不访问外部模型。模型假设默认不阻断。
+**Constraints**: 不修改被审核仓库的源文件、OpenSpec 和 Git 历史。使用者不把 SpecGuard 源码克隆进被审核仓库；安装器可以从 GitHub 或本地路径把包装进工具环境。配置无效时在检查前退出。检查状态只能是通过、失败、跳过、错误或超时。未配置内部模型时不访问外部模型。模型假设默认不阻断。不把未发布到 PyPI 的包写成 `uv tool install specguard`。
 
 **Scale/Scope**: 一次命令审核一个仓库中的一个选定变更。v0.1 不覆盖 Java 以外的项目，不提供审核平台，也不绑定某个编程助手。
 
@@ -69,6 +69,7 @@ Phase 1 的数据模型、命令契约、配置契约和报告契约落实了上
 | 报告路径逃逸在写入前拒绝 | 通过 |
 | 构建隔离用于不可信仓库，失败时检查为错误而不是通过 | 通过 |
 | 命令允许列表阻止模型生成的任意命令 | 通过 |
+| 安装从 GitHub 或本地路径进入工具环境，不把源码放进被审核仓库，也不指向 PyPI | 通过 |
 
 设计后仍然没有需要豁免的偏离。
 
@@ -125,3 +126,4 @@ tests/
 5. 按 [quickstart.md](quickstart.md) 验证静态模式、只读边界和退出码。
 6. 再实现内网辅助审查、密钥遮盖和假设标记。
 7. 最后实现显式严格策略的退出码。默认配置保持建议模式，不安装合并门禁。
+8. 安装说明改为 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`；用本地源码路径验证 `uv tool install` 能在源码树外运行 `specguard version`。
