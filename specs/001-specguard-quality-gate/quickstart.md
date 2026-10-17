@@ -129,3 +129,14 @@ specguard review --policy strict --mode static
 - 两份都写明 SpecGuard 是只读质量门，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`，并且包含在不含 `src/specguard` 的目录运行 `specguard version` 的验证。
 - 两份都不把产品写成编程助手，也不写成默认会阻止合并的门禁。
 - 根目录 `LICENSE` 是 Apache-2.0 标准文本，`pyproject.toml` 的许可证标识是 `Apache-2.0`，两份 README 都链接到 `LICENSE`。
+
+## 11. 功能分支合入 master
+
+在工作区干净时，把 `001-specguard-quality-gate` 快进合并到 `master`，并推送 `origin/master`。
+
+期望：
+
+- `master` 与合并前的功能分支指向同一提交。
+- `origin/master` 与本地 `master` 一致。
+- 没有使用强制推送。
+- SpecGuard 的审核命令仍然不合并被审核仓库。

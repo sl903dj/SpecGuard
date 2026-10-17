@@ -26,6 +26,12 @@
 - **Rationale**: 许可证必须由版权持有人指定。选定之后，仓库首页、打包元数据和许可证正文使用同一个 SPDX 标识，避免 README 和包元数据各写一套。
 - **Alternatives considered**: MIT、BSD-2-Clause、GPL-3.0-only 和保留所有权利已提出但未选用。Spec Kit 扩展元数据里的 MIT 不是 SpecGuard 的许可。
 
+## Decision: 把功能分支快进合并到 master 并推送
+
+- **Decision**: 维护者把 `001-specguard-quality-gate` 合并进本地 `master`。`master` 没有功能分支之外的提交，所以使用快进合并。然后把 `master` 推送到 `origin`（`https://github.com/sl903dj/SpecGuard.git`）。不使用 `--force`。功能分支保留，后续 Spec Kit 命令仍在该分支上继续。
+- **Rationale**: 合并前 GitHub 上的 `master` 停在 `3734e02`，默认分支看不到已完成的安装说明、README 和许可证。快进合并保持历史一条直线。合并和推送完成后，本地 `master` 与 `origin/master` 都指向 `b5d0d06`。宪章禁止的是 SpecGuard 自动合并被审核项目，不是维护者集成 SpecGuard 自己的仓库。
+- **Alternatives considered**: 只推送功能分支会让 `master` 继续落后。强制推送会改写已经公开的 `master`。在产品里增加合并被审核仓库的命令，违反只读质量门原则。
+
 ## Decision: 用 Python 3.11 实现只读 CLI
 
 - **Decision**: SpecGuard 本体使用 Python 3.11 或更高版本，作为本地命令行工具发布。审核对象仍是 Java / Spring Boot 仓库，SpecGuard 不因此改用 Java。

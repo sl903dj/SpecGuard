@@ -73,6 +73,7 @@ Phase 1 的数据模型、命令契约、配置契约和报告契约落实了上
 | 命令允许列表阻止模型生成的任意命令 | 通过 |
 | 安装从 GitHub 或本地路径进入工具环境，不把源码放进被审核仓库，也不指向 PyPI | 通过 |
 | 中英文 README 把产品写成质量门，不写成编程助手或默认合并门禁 | 通过 |
+| 维护者把 SpecGuard 自己的功能分支合入 `master`；产品仍不合并被审核仓库 | 通过 |
 
 设计后仍然没有需要豁免的偏离。许可证为 Apache-2.0，不改变只读质量门的行为。
 
@@ -132,3 +133,4 @@ tests/
 8. 安装说明改为 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`；用本地源码路径验证 `uv tool install` 能在源码树外运行 `specguard version`。
 9. 写中文 `README.md` 和英文 `README.en.md`。两份文首互相链接，并写明质量门定位、GitHub 安装、本地安装验证，以及在被审核仓库中运行的最短命令。
 10. 添加根目录 `LICENSE`（Apache-2.0）和 `pyproject.toml` 的 `license = "Apache-2.0"`，并在两份 README 中链接该文件。
+11. 维护者把 `001-specguard-quality-gate` 快进合并到 `master`，并推送 `origin/master`。不使用强制推送。这一步只集成 SpecGuard 自己的仓库，不让产品去合并被审核仓库。
