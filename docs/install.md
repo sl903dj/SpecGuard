@@ -6,10 +6,10 @@ v0.1 的安装入口是 Python 控制台脚本，不要求原生二进制。
 
 ## 使用者
 
-在本机安装命令。示例：
+从 GitHub 安装：
 
 ```bash
-uv tool install specguard
+uv tool install "git+https://github.com/sl903dj/SpecGuard"
 ```
 
 安装完成后，进入被审核仓库：
@@ -21,6 +21,19 @@ specguard review --config specguard.yaml --mode static --policy advisory
 ```
 
 被审核仓库只需要自己的 Git 历史、OpenSpec 变更和 `specguard.yaml`。
+
+## 验证本地源码
+
+把 `<checkout>` 换成 SpecGuard 源码检出的绝对路径：
+
+```bash
+uv tool install --force <checkout>
+mkdir -p /tmp/specguard-install-check
+cd /tmp/specguard-install-check
+specguard version
+```
+
+`/tmp/specguard-install-check` 里没有 `src/specguard`。`specguard version` 应输出 `0.1.0`。
 
 ## 开发者
 

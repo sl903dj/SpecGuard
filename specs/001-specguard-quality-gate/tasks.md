@@ -414,3 +414,11 @@ Task: "T054 tests/unit/test_policy.py"
 - [X] T078 在 `tests/unit/test_install_entry.py` 中编写失败测试：`pyproject.toml` 的 `[project.scripts]` 将 `specguard` 指向 `specguard.cli.main:app`；`docs/install.md` 写明使用者安装命令后在被审核仓库运行、不克隆 SpecGuard 源码，并且 v0.1 不要求原生二进制
 - [X] T079 在 `pyproject.toml` 中保留控制台脚本 `specguard = "specguard.cli.main:app"`，不添加原生二进制打包配置
 - [X] T080 [P] 在 `docs/install.md` 中写明使用者把 `specguard` 安装到命令路径，再到被审核的 Java 仓库运行；该仓库不包含 SpecGuard 源码。开发者才在本仓库源码检出中测试
+
+---
+
+## Phase 16: Convergence
+
+- [X] T081 把 `docs/install.md` 的安装命令改为 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`，并写明用源码绝对路径执行 `uv tool install --force` 后，在不含 `src/specguard` 的目录运行 `specguard version`；不得再写 `uv tool install specguard`。同步更新 `tests/unit/test_install_entry.py` per plan: GitHub install (contradicts)
+- [X] T082 在仓库根目录添加 Apache-2.0 标准文本 `LICENSE`，版权行写 `Copyright 2026 sl903dj`，并把 `pyproject.toml` 的 `license` 设为 `Apache-2.0` per plan: Apache-2.0 license (missing)
+- [X] T083 添加中文 `README.md` 和英文 `README.en.md`，文首互相链接，写明只读质量门、GitHub 安装、本地 `specguard version` 验证，并链接 `LICENSE`；不得把产品写成编程助手或默认合并门禁 per plan: bilingual README (missing)

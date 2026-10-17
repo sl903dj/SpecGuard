@@ -16,6 +16,8 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 交付顺序固定为：配置与报告模型、只读 Git 与 OpenSpec 解析、确定性检查、证据追溯、报告与退出码、内网辅助审查、严格策略信号。辅助审查不能成为前面各步可用的前提。
 
+仓库根目录提供中文 `README.md` 和英文 `README.en.md`，文首互相链接。两份说明同一件事：SpecGuard 是只读质量门，从 GitHub 安装命令，在被审核仓库里运行。许可证是 Apache-2.0，放在根目录 `LICENSE`，并写入 `pyproject.toml`。
+
 ## Technical Context
 
 **Language/Version**: Python 3.11 或更高版本
@@ -34,7 +36,7 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 **Constraints**: 不修改被审核仓库的源文件、OpenSpec 和 Git 历史。使用者不把 SpecGuard 源码克隆进被审核仓库；安装器可以从 GitHub 或本地路径把包装进工具环境。配置无效时在检查前退出。检查状态只能是通过、失败、跳过、错误或超时。未配置内部模型时不访问外部模型。模型假设默认不阻断。不把未发布到 PyPI 的包写成 `uv tool install specguard`。
 
-**Scale/Scope**: 一次命令审核一个仓库中的一个选定变更。v0.1 不覆盖 Java 以外的项目，不提供审核平台，也不绑定某个编程助手。
+**Scale/Scope**: 一次命令审核一个仓库中的一个选定变更。v0.1 不覆盖 Java 以外的项目，不提供审核平台，也不绑定某个编程助手。仓库根目录需要中文 `README.md`、英文 `README.en.md` 和 Apache-2.0 的 `LICENSE`。
 
 ## Constitution Check
 
@@ -70,8 +72,9 @@ Phase 1 的数据模型、命令契约、配置契约和报告契约落实了上
 | 构建隔离用于不可信仓库，失败时检查为错误而不是通过 | 通过 |
 | 命令允许列表阻止模型生成的任意命令 | 通过 |
 | 安装从 GitHub 或本地路径进入工具环境，不把源码放进被审核仓库，也不指向 PyPI | 通过 |
+| 中英文 README 把产品写成质量门，不写成编程助手或默认合并门禁 | 通过 |
 
-设计后仍然没有需要豁免的偏离。
+设计后仍然没有需要豁免的偏离。许可证为 Apache-2.0，不改变只读质量门的行为。
 
 ## Project Structure
 
@@ -111,7 +114,7 @@ tests/
 └── fixtures/             # 小型 Git 与 OpenSpec 样例仓库
 ```
 
-**Structure Decision**: 使用单一 Python 包，而不是网页的前后端结构。每个目录对应设计包中的一个边界：命令、版本库、OpenSpec、项目识别、检查执行、审核、模型和报告。测试分单元、集成和夹具，避免把样例 Java 仓库混进产品源码。
+**Structure Decision**: 使用单一 Python 包，而不是网页的前后端结构。每个目录对应设计包中的一个边界：命令、版本库、OpenSpec、项目识别、检查执行、审核、模型和报告。测试分单元、集成和夹具，避免把样例 Java 仓库混进产品源码。仓库根目录另放 `README.md`（中文）、`README.en.md`（英文）和 `LICENSE`（Apache-2.0 标准文本）。`pyproject.toml` 的 `license` 字段使用 SPDX 标识 `Apache-2.0`。版权行写仓库所有者 `sl903dj` 和年份 2026。
 
 ## Complexity Tracking
 
@@ -127,3 +130,5 @@ tests/
 6. 再实现内网辅助审查、密钥遮盖和假设标记。
 7. 最后实现显式严格策略的退出码。默认配置保持建议模式，不安装合并门禁。
 8. 安装说明改为 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`；用本地源码路径验证 `uv tool install` 能在源码树外运行 `specguard version`。
+9. 写中文 `README.md` 和英文 `README.en.md`。两份文首互相链接，并写明质量门定位、GitHub 安装、本地安装验证，以及在被审核仓库中运行的最短命令。
+10. 添加根目录 `LICENSE`（Apache-2.0）和 `pyproject.toml` 的 `license = "Apache-2.0"`，并在两份 README 中链接该文件。

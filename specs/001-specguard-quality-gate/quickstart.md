@@ -118,3 +118,14 @@ specguard review --policy strict --mode static
 - 每条结论都能找到证据，或标成证据不足。
 - 最高风险排在风险列表前面。
 - 状态为 `PASS` 或已确认 `FAIL` 的检查出现在可靠检查中；跳过和超时的检查不在其中。
+
+## 10. 中英文 README
+
+仓库根目录应有 `README.md` 和 `README.en.md`。
+
+期望：
+
+- `README.md` 为中文，`README.en.md` 为英文，文首互相链接。
+- 两份都写明 SpecGuard 是只读质量门，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`，并且包含在不含 `src/specguard` 的目录运行 `specguard version` 的验证。
+- 两份都不把产品写成编程助手，也不写成默认会阻止合并的门禁。
+- 根目录 `LICENSE` 是 Apache-2.0 标准文本，`pyproject.toml` 的许可证标识是 `Apache-2.0`，两份 README 都链接到 `LICENSE`。

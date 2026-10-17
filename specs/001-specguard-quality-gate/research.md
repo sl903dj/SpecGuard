@@ -14,6 +14,18 @@
 - **Rationale**: `uv tool install specguard` 会向默认索引查找包名。包不在 PyPI 时这条命令失败，不能写成安装说明。从 Git 地址安装与 Spec Kit 的 uv 工具安装方式相同，同时保留“被审核仓库里没有 SpecGuard 源码”的边界。本地路径安装使用同一安装器，用来在远程还不存在时证明控制台脚本可以被装上并在源码树外运行。
 - **Alternatives considered**: 继续写 `uv tool install specguard` 会被索引拒绝。先发布到 PyPI 才能使用包名，但 v0.1 没有选定公开索引。只在源码树里用 `python -m specguard` 不能证明命令已安装到 PATH。`--editable` 安装仍指向源码目录，不能代替一次非可编辑安装。
 
+## Decision: 仓库根目录提供中英文 README
+
+- **Decision**: GitHub 默认展示中文 `README.md`。英文为同级的 `README.en.md`。两份文件文首互相链接，章节一一对应：产品是只读质量门而不是编程助手；它回答需求符合性、任务完整性、代码风险、测试有效性和审核效率；安装使用 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`，不用 PyPI 包名；本地源码用绝对路径安装后，在不含 `src/specguard` 的目录运行 `specguard version`；审核在被审核仓库中运行。详细步骤指向 `docs/install.md` 和 `specs/001-specguard-quality-gate/quickstart.md`，不复制命令契约和报告契约全文。
+- **Rationale**: 仓库里的规格和计划是中文，GitHub 首页用中文可以直接阅读。单独的英文文件让英文读者不用在同一页里切换语言。两份文件保持同一结构，避免一边多写一边漏写安装限制。
+- **Alternatives considered**: 只写一份双语 README 会让 GitHub 首页变长，也更难保持两边同步。只写英文 README 和现有中文规格脱节。把 `docs/install.md` 当作 README 不能出现在 GitHub 仓库首页。
+
+## Decision: 仓库许可证使用 Apache-2.0
+
+- **Decision**: 版权持有人选择 Apache-2.0。根目录 `LICENSE` 使用 Apache License 2.0 标准文本，版权行写 `Copyright 2026 sl903dj`。`pyproject.toml` 设置 `license = "Apache-2.0"`。中英文 README 都链接到 `LICENSE`，并写明许可证名称。不另写 `NOTICE`，当前没有需要单独署名的第三方声明。
+- **Rationale**: 许可证必须由版权持有人指定。选定之后，仓库首页、打包元数据和许可证正文使用同一个 SPDX 标识，避免 README 和包元数据各写一套。
+- **Alternatives considered**: MIT、BSD-2-Clause、GPL-3.0-only 和保留所有权利已提出但未选用。Spec Kit 扩展元数据里的 MIT 不是 SpecGuard 的许可。
+
 ## Decision: 用 Python 3.11 实现只读 CLI
 
 - **Decision**: SpecGuard 本体使用 Python 3.11 或更高版本，作为本地命令行工具发布。审核对象仍是 Java / Spring Boot 仓库，SpecGuard 不因此改用 Java。
