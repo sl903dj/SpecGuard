@@ -137,3 +137,4 @@ tests/
 11. 维护者把 `001-specguard-quality-gate` 快进合并到 `master`，并推送 `origin/master`。不使用强制推送。这一步只集成 SpecGuard 自己的仓库，不让产品去合并被审核仓库。
 12. 在 `docs/install.md` 写明内网离线安装：外网取得 GitHub 源码和依赖轮子，手工传入内网；列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，并说明传递依赖随轮子目录一起传入。内网安装使用 `uv tool install --offline --no-index --find-links`。中英文 README 指向这一节。
 13. 离线安装的项目路径是含 `pyproject.toml` 的检出根目录，文档写明不要传入 `src/specguard`。轮子目录额外包含构建依赖 `setuptools>=68`，因为从源码目录安装会按 `[build-system] requires` 本地构建。
+14. `docs/install.md` 在 `specguard version` 之前说明：`mkdir` 和 `cd` 是为了离开源码检出，到一个空目录里运行已经安装的命令。这个目录不是安装位置，命令也不会往里面写文件。

@@ -19,7 +19,7 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
-期望：该目录里没有 `src/specguard`；`specguard version` 退出码为 `0`，输出 `0.1.0`。这只证明命令能从本地源码装上并在源码树外运行。
+`mkdir` 和 `cd` 发生在安装之后、运行 `specguard version` 之前。空目录是当前工作目录，不是安装位置；`specguard version` 不往里面写文件。期望：该目录里没有 `src/specguard`；`specguard version` 退出码为 `0`，输出 `0.1.0`。这证明已安装的命令不依赖当前目录是源码检出。
 
 内网电脑不能访问 GitHub 或 PyPI 时，不使用上面的 Git 地址。在外网机器取得检出和依赖轮子，再手工拷进内网。直接依赖是 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`。轮子目录还要包含传递依赖，以及构建依赖 `setuptools>=68`。内网机已有 Python 3.11+ 和 `uv`。
 
@@ -44,7 +44,7 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
-期望：安装过程不访问 `github.com` 或 `pypi.org`；`specguard version` 退出码为 `0`，输出 `0.1.0`；该目录没有 `src/specguard`。详细说明以 `docs/install.md` 为准。
+这里的 `mkdir` 和 `cd` 同样是在安装之后离开源码检出。空目录不是安装位置。期望：安装过程不访问 `github.com` 或 `pypi.org`；`specguard version` 退出码为 `0`，输出 `0.1.0`；该目录没有 `src/specguard`，也没有被写入安装文件。详细说明以 `docs/install.md` 为准。
 
 安装器把 `specguard` 放到命令路径后，到被审核的 Java 仓库里运行。该仓库需要：
 

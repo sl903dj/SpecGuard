@@ -87,3 +87,15 @@ def test_offline_install_uses_checkout_root_and_setuptools() -> None:
     assert "build-system" in text
     assert "<检出根目录>" in text
     assert "<源码目录>" not in text
+
+
+def test_empty_directory_is_only_for_version_check() -> None:
+    text = (ROOT / "docs" / "install.md").read_text(encoding="utf-8")
+    local, offline = text.split("## 内网离线安装", 1)
+    phrase = "空目录是当前工作目录，不是安装位置"
+    for section in (local, offline):
+        assert "mkdir -p /tmp/specguard-install-check" in section
+        assert phrase in section
+        assert "安装之后" in section
+        assert "不往里面写文件" in section
+        assert section.index(phrase) < section.index("mkdir -p /tmp/specguard-install-check")

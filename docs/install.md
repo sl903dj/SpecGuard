@@ -24,7 +24,7 @@ specguard review --config specguard.yaml --mode static --policy advisory
 
 ## 验证本地源码
 
-把 `<checkout>` 换成 SpecGuard 源码检出的绝对路径：
+把 `<checkout>` 换成 SpecGuard 源码检出的绝对路径。安装之后，先离开源码检出再运行 `specguard version`。下面的空目录是当前工作目录，不是安装位置，命令不往里面写文件。
 
 ```bash
 uv tool install --force <checkout>
@@ -66,7 +66,7 @@ uv pip install --python /tmp/specguard-fetch/bin/python pip
 /tmp/specguard-fetch/bin/python -m pip download -r requirements.txt "setuptools>=68" -d /tmp/specguard-wheels
 ```
 
-把克隆得到的 `SpecGuard` 目录和 `/tmp/specguard-wheels` 手工拷进内网。`<检出根目录>` 是含有 `pyproject.toml` 的那一层。不要传入 `src/specguard`，该目录没有 `pyproject.toml`。内网安装：
+把克隆得到的 `SpecGuard` 目录和 `/tmp/specguard-wheels` 手工拷进内网。`<检出根目录>` 是含有 `pyproject.toml` 的那一层。不要传入 `src/specguard`，该目录没有 `pyproject.toml`。内网安装之后，先离开源码检出再运行 `specguard version`。下面的空目录是当前工作目录，不是安装位置，命令不往里面写文件。
 
 ```bash
 uv tool install --offline --no-index --find-links <轮子目录> <检出根目录>

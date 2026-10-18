@@ -445,3 +445,14 @@ Task: "T054 tests/unit/test_policy.py"
 
 - [X] T087 在 `tests/unit/test_install_entry.py` 中编写失败测试：`docs/install.md` 写明离线安装路径是含 `pyproject.toml` 的检出根目录，不要传入 `src/specguard`；轮子下载包含 `setuptools>=68`
 - [X] T088 在 `docs/install.md` 中把离线安装参数从含糊的源码目录改成含 `pyproject.toml` 的检出根目录，并在 `pip download` 中加入 `"setuptools>=68"`，说明它来自 `[build-system] requires`，不是运行时依赖
+
+---
+
+## Phase 19: 空目录只用于验证
+
+**Purpose**: 说明 `mkdir` 和 `cd` 是在安装之后离开源码检出，到空目录运行已安装的 `specguard version`。该目录不是安装位置。
+
+**Independent Test**: `docs/install.md` 的本地验证和内网离线安装两处都写明空目录是当前工作目录，命令不往里面写文件。
+
+- [X] T089 在 `tests/unit/test_install_entry.py` 中编写失败测试：`docs/install.md` 在本地验证和内网离线安装两处都写明，`mkdir -p /tmp/specguard-install-check` 与 `cd` 发生在安装之后、`specguard version` 之前；该目录是空的当前工作目录，不是安装位置，命令不往里面写文件
+- [X] T090 在 `docs/install.md` 的「验证本地源码」和「内网离线安装」两处，于 `mkdir` 命令前写明上述用途

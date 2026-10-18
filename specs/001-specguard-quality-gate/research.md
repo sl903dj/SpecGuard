@@ -14,6 +14,12 @@
 - **Rationale**: `uv tool install specguard` 会向默认索引查找包名。包不在 PyPI 时这条命令失败，不能写成安装说明。从 Git 地址安装与 Spec Kit 的 uv 工具安装方式相同，同时保留“被审核仓库里没有 SpecGuard 源码”的边界。本地路径安装使用同一安装器，用来在远程还不存在时证明控制台脚本可以被装上并在源码树外运行。
 - **Alternatives considered**: 继续写 `uv tool install specguard` 会被索引拒绝。先发布到 PyPI 才能使用包名，但 v0.1 没有选定公开索引。只在源码树里用 `python -m specguard` 不能证明命令已安装到 PATH。`--editable` 安装仍指向源码目录，不能代替一次非可编辑安装。
 
+## Decision: 用空目录验证命令不依赖源码检出
+
+- **Decision**: 安装完成后，先执行 `mkdir -p /tmp/specguard-install-check` 和 `cd /tmp/specguard-install-check`，再运行 `specguard version`。这个目录在运行前是空的，而且保持为空。它是当前工作目录，不是安装位置，也不是报告目录。`docs/install.md` 必须在这两条命令前写明：目的是离开 SpecGuard 源码检出，确认已安装的命令不依赖当前目录里有 `src/specguard`。本地源码验证和内网离线安装都使用同一说明。
+- **Rationale**: `uv tool install` 把命令放到命令路径。如果仍站在检出目录里运行 `specguard version`，成功不能区分「命令已安装」和「因为当前目录就是源码树」。空目录排除后一种情况。`specguard version` 不读取也不写入当前目录。
+- **Alternatives considered**: 删掉这两条命令，只在源码目录里运行版本命令，无法证明命令可以在被审核仓库里使用。把空目录写成安装输出目录，和 `uv tool install` 的实际行为不符。
+
 ## Decision: 内网电脑用手工传入的源码和依赖离线安装
 
 - **Decision**: 不能访问 GitHub 或 PyPI 的内网电脑不执行 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。在一台能访问外网的电脑上克隆 `https://github.com/sl903dj/SpecGuard.git`，导出运行时依赖并下载成轮子目录，再额外下载 `setuptools>=68`。把检出根目录和轮子目录手工拷进内网。内网安装命令是 `uv tool install --offline --no-index --find-links <轮子目录> <检出根目录>`。`<检出根目录>` 是含有 `pyproject.toml` 的克隆目录，不是 `src/specguard`。装好后到一个不含 `src/specguard` 的目录运行 `specguard version`，期望输出 `0.1.0`。`docs/install.md` 列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，并列出构建依赖 `setuptools>=68`。轮子目录必须同时包含运行时传递依赖和 `setuptools`。`pytest` 是开发依赖，安装命令时不需要。内网机预先具备 Python 3.11 或更高版本以及 `uv`。中英文 README 指向 `docs/install.md` 的离线安装一节。
