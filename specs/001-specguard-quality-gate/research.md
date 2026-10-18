@@ -116,6 +116,12 @@
 - **Rationale**: 规格同时要求“明确配置的确定性失败可以给出阻断信号”和“对照完成前不启用阻止合并的质量门禁”。把信号做成显式选项、把默认和部署保持为建议，两条都能满足。
 - **Alternatives considered**: v0.1 完全不实现严格策略，会让验收场景无法测试。把严格策略做成默认或自动接入合并，则违反宪章。
 
+## Decision: 安装之后的使用步骤单独成文
+
+- **Decision**: 安装说明停在「命令已经在 PATH 上」。安装之后怎么用，写在中文 `docs/usage.md`，按固定顺序展开，每一步都给出命令、成功时看到什么、失败时的退出码和下一步。顺序是：确认 `specguard version` 与 `specguard --help`；进入被审核 Java 仓库的 Git 根目录，不把 SpecGuard 源码克隆进去；确认 `openspec/changes/<变更名>/` 里有提案、设计和任务；在仓库根编写最小 `specguard.yaml`（`version: 1` 与可解析的 `git.base`）；运行 `specguard config validate --config specguard.yaml`；工作区有未提交改动时先提交，或显式加上 `--include-worktree`；运行 `specguard review --config specguard.yaml --mode static --policy advisory`；到标准输出打印的 `.specguard/reports/<变更名>-<提交前 12 位>.md` 与同名 `.json` 阅读报告，并链接 `docs/report-interpretation.md`；工程师自己决定是否接受变更，SpecGuard 不合并。多个进行中的变更必须加 `--change`。`--config` 在 v0.1 必须显式传入。严格模式 `--policy strict` 和内网辅助审查 `--mode assisted` 写在第一次使用之后，标明可选。`docs/install.md` 的「使用者」一节和两份 README 都链接 `docs/usage.md`。英文 README 只给链接，不另写长步骤。
+- **Rationale**: 现在的安装文档只并列 `version`、`config validate` 和 `review` 三条命令，没有说明要站在哪个目录、配置至少写什么、未提交改动会停在哪里、报告文件在哪、退出码 0 仍可能有发现。空目录只证明命令已安装，继续在那里审核会因为「当前目录不在版本库中」而退出 4。把使用步骤和安装步骤分开，避免把验证用的空目录写成日常工作目录。
+- **Alternatives considered**: 继续把三条命令留在 `docs/install.md`，读者仍然不知道失败后看什么。把 quickstart 的夹具场景当作使用者文档，会要求对方进入 SpecGuard 源码检出。第一次使用就写 `--mode assisted` 或 `--policy strict`，会把可选能力和默认建议模式混成必经步骤。另写一份英文长步骤会和现有中文安装文档分成两套，当前只在英文 README 里指向中文步骤。
+
 ## Decision: 不可信仓库的构建放进隔离工作区
 
 - **Decision**: 默认文档说明 Maven 和 Gradle 会执行项目自己的插件。配置 `isolate_builds: true` 时，构建在仓库的临时副本中运行，不把构建写入原工作区。隔离失败时对应检查为 `ERROR`，不是 `PASS`。

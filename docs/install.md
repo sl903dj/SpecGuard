@@ -12,15 +12,7 @@ v0.1 的安装入口是 Python 控制台脚本，不要求原生二进制。
 uv tool install "git+https://github.com/sl903dj/SpecGuard"
 ```
 
-安装完成后，进入被审核仓库：
-
-```bash
-specguard version
-specguard config validate --config specguard.yaml
-specguard review --config specguard.yaml --mode static --policy advisory
-```
-
-被审核仓库只需要自己的 Git 历史、OpenSpec 变更和 `specguard.yaml`。
+安装完成后，到被审核仓库里按 [docs/usage.md](usage.md) 运行。该仓库只需要自己的 Git 历史、OpenSpec 变更和 `specguard.yaml`。
 
 ## 验证本地源码
 

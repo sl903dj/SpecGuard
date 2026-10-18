@@ -16,6 +16,8 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 交付顺序固定为：配置与报告模型、只读 Git 与 OpenSpec 解析、确定性检查、证据追溯、报告与退出码、内网辅助审查、严格策略信号。辅助审查不能成为前面各步可用的前提。
 
+安装完成之后的日常使用写在 `docs/usage.md`。步骤从确认 `specguard version` 开始，接着进入被审核的 Git 仓库、准备 OpenSpec 变更、编写最小 `specguard.yaml`、校验配置、处理未提交改动、运行静态建议审核、按报告阅读结论，最后由工程师决定是否接受变更。严格模式和内网辅助审查只作为后续可选步骤。安装验证用的空目录不是使用地点。
+
 仓库根目录提供中文 `README.md` 和英文 `README.en.md`，文首互相链接。两份说明同一件事：SpecGuard 是只读质量门，从 GitHub 安装命令，在被审核仓库里运行。许可证是 Apache-2.0，放在根目录 `LICENSE`，并写入 `pyproject.toml`。
 
 ## Technical Context
@@ -75,6 +77,7 @@ Phase 1 的数据模型、命令契约、配置契约和报告契约落实了上
 | 内网离线安装只使用手工传入的源码和依赖目录，安装时不访问 GitHub 或 PyPI | 通过 |
 | 中英文 README 把产品写成质量门，不写成编程助手或默认合并门禁 | 通过 |
 | 维护者把 SpecGuard 自己的功能分支合入 `master`；产品仍不合并被审核仓库 | 通过 |
+| 使用说明按只读审核步骤书写，第一次使用停在静态建议模式，不写成编程助手或默认合并门禁 | 通过 |
 
 设计后仍然没有需要豁免的偏离。许可证为 Apache-2.0，不改变只读质量门的行为。
 
@@ -138,3 +141,4 @@ tests/
 12. 在 `docs/install.md` 写明内网离线安装：外网取得 GitHub 源码和依赖轮子，手工传入内网；列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，并说明传递依赖随轮子目录一起传入。内网安装使用 `uv tool install --offline --no-index --find-links`。中英文 README 指向这一节。
 13. 离线安装的项目路径是含 `pyproject.toml` 的检出根目录，文档写明不要传入 `src/specguard`。轮子目录额外包含构建依赖 `setuptools>=68`，因为从源码目录安装会按 `[build-system] requires` 本地构建。
 14. `docs/install.md` 在 `specguard version` 之前说明：`mkdir` 和 `cd` 是为了离开源码检出，到一个空目录里运行已经安装的命令。这个目录不是安装位置，命令也不会往里面写文件。
+15. 新增中文 `docs/usage.md`，按 [命令契约](contracts/cli.md) 的使用顺序写安装之后的详细步骤。`docs/install.md` 的「使用者」一节改为指向该文件。中文 `README.md` 和英文 `README.en.md` 都链接 `docs/usage.md`。英文 README 不另写一份长步骤，只说明详细步骤在中文文档。第一次使用停在 `--mode static --policy advisory`。

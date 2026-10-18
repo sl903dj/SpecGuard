@@ -165,3 +165,16 @@ specguard review --policy strict --mode static
 - `origin/master` 与本地 `master` 一致。
 - 没有使用强制推送。
 - SpecGuard 的审核命令仍然不合并被审核仓库。
+
+## 12. 安装之后的使用步骤
+
+`docs/usage.md` 存在，并且按 [命令契约](contracts/cli.md) 的使用顺序书写。`docs/install.md` 的「使用者」一节、`README.md` 和 `README.en.md` 都链接到 `docs/usage.md`。
+
+期望：
+
+- 步骤顺序包含 `specguard version`、进入含 `.git` 的被审核仓库、`openspec/changes/`、最小配置 `version: 1` 与 `git.base`、`specguard config validate --config specguard.yaml`、未提交改动时的停止说明、`specguard review --config specguard.yaml --mode static --policy advisory`、`.specguard/reports`，以及指向 `docs/report-interpretation.md` 的链接。
+- `--policy strict` 和 `--mode assisted` 出现在静态建议审核之后，并标明可选。
+- 文档写明空目录只用于安装验证，审核要在被审核仓库里运行。
+- 文档写明工程师决定是否接受变更，SpecGuard 不合并该仓库。
+- 文档不把产品写成编程助手，也不把默认策略写成合并门禁。
+- 英文 README 链接该中文文档，不另写一份英文长步骤。

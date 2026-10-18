@@ -456,3 +456,15 @@ Task: "T054 tests/unit/test_policy.py"
 
 - [X] T089 在 `tests/unit/test_install_entry.py` 中编写失败测试：`docs/install.md` 在本地验证和内网离线安装两处都写明，`mkdir -p /tmp/specguard-install-check` 与 `cd` 发生在安装之后、`specguard version` 之前；该目录是空的当前工作目录，不是安装位置，命令不往里面写文件
 - [X] T090 在 `docs/install.md` 的「验证本地源码」和「内网离线安装」两处，于 `mkdir` 命令前写明上述用途
+
+---
+
+## Phase 20: 安装之后的使用步骤
+
+**Purpose**: 在中文 `docs/usage.md` 按命令契约的使用顺序写明安装之后如何在被审核仓库里完成一次静态建议审核。安装文档和两份 README 只指向该文件。
+
+**Independent Test**: `docs/usage.md` 按顺序包含确认命令、进入 Git 仓库、OpenSpec 变更、最小配置、校验配置、未提交改动、静态建议审核、报告路径和报告阅读链接。`--policy strict` 与 `--mode assisted` 出现在这次审核之后并标明可选。`docs/install.md` 的「使用者」一节、`README.md` 和 `README.en.md` 都链接 `docs/usage.md`。
+
+- [X] T091 在 `tests/unit/test_usage_doc.py` 中编写失败测试：`docs/usage.md` 按此顺序出现 `specguard version`、含 `.git` 的被审核仓库、`openspec/changes/`、`version: 1`、`git.base`、`specguard config validate --config specguard.yaml`、未提交改动时停止审核、`specguard review --config specguard.yaml --mode static --policy advisory`、`.specguard/reports`，以及指向 `docs/report-interpretation.md` 的链接。`--policy strict` 和 `--mode assisted` 都在该静态建议命令之后，并写明可选。文档写明空目录只用于安装验证，审核在被审核仓库中运行；工程师决定是否接受变更，SpecGuard 不合并该仓库。文档不出现「编程助手」，也不把默认策略写成阻止合并的门禁。`docs/install.md` 的「使用者」一节、`README.md` 和 `README.en.md` 都包含 `docs/usage.md`。`README.en.md` 不包含 `specguard review --config specguard.yaml --mode static --policy advisory`
+- [X] T092 [P] 按 `specs/001-specguard-quality-gate/contracts/cli.md` 的「安装之后的使用顺序」编写 `docs/usage.md`。九步都写命令、成功时看到什么、失败时的退出码和下一步。最小配置只要求 `version: 1` 和可解析的 `git.base`，并说明 `git.base` 写成 `main` 时要换成该仓库真实基线。`--config` 必须显式传入。建议模式下报告可以有 `FAIL` 而进程仍退出 `0`。报告默认路径是 `.specguard/reports/<变更名>-<目标提交前 12 位>.md` 与同名 `.json`。状态词不在本文重定义，改为链接 `docs/report-interpretation.md`。严格模式和内网辅助审查放在工程师决定之后，标明可选：前者把 `--policy advisory` 换成 `--policy strict`；后者先配置内网 `llm.base_url` 再用 `--mode assisted`
+- [X] T093 [P] 把 `docs/install.md` 的「使用者」一节改成指向 `docs/usage.md`，不再在安装文档里重复完整审核步骤。在 `README.md` 和 `README.en.md` 的安装节之后链接 `docs/usage.md`。英文 README 只说明详细步骤在该中文文档，不另写英文长步骤
