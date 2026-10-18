@@ -14,6 +14,12 @@
 - **Rationale**: `uv tool install specguard` 会向默认索引查找包名。包不在 PyPI 时这条命令失败，不能写成安装说明。从 Git 地址安装与 Spec Kit 的 uv 工具安装方式相同，同时保留“被审核仓库里没有 SpecGuard 源码”的边界。本地路径安装使用同一安装器，用来在远程还不存在时证明控制台脚本可以被装上并在源码树外运行。
 - **Alternatives considered**: 继续写 `uv tool install specguard` 会被索引拒绝。先发布到 PyPI 才能使用包名，但 v0.1 没有选定公开索引。只在源码树里用 `python -m specguard` 不能证明命令已安装到 PATH。`--editable` 安装仍指向源码目录，不能代替一次非可编辑安装。
 
+## Decision: 内网电脑用手工传入的源码和依赖离线安装
+
+- **Decision**: 不能访问 GitHub 或 PyPI 的内网电脑不执行 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。在一台能访问外网的电脑上克隆 `https://github.com/sl903dj/SpecGuard.git`，导出运行时依赖并下载成轮子目录，再把源码目录和轮子目录手工拷进内网。内网安装命令是 `uv tool install --offline --no-index --find-links <轮子目录> <源码目录>`。装好后到一个不含 `src/specguard` 的目录运行 `specguard version`，期望输出 `0.1.0`。`docs/install.md` 列出直接依赖：`typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`。轮子目录必须同时包含这些包的传递依赖，不能只拷这四个名字。`pytest` 是开发依赖，安装命令时不需要。内网机预先具备 Python 3.11 或更高版本以及 `uv`；这两样不从本次拷贝的 SpecGuard 依赖里安装。中英文 README 指向 `docs/install.md` 的离线安装一节。
+- **Rationale**: 内网机访问不了 `github.com` 时，Git 地址安装会失败。只拷源码仍会在安装时向 PyPI 要 Typer、Pydantic、httpx 和 PyYAML。`--offline` 禁止网络，`--no-index` 不使用默认索引，`--find-links` 只使用手工传入的轮子目录。直接依赖写进安装说明，是为了让传递进来的目录可以被核对；传递依赖随导出结果一起走，避免漏掉间接包。
+- **Alternatives considered**: 继续只写 GitHub 地址，内网机无法执行。把包发布到 PyPI 仍要外网，而且 v0.1 没有选定公开索引。只列出四个直接依赖、不带传递依赖，离线安装会缺包。把 SpecGuard 源码克隆进被审核仓库，违反使用边界。
+
 ## Decision: 仓库根目录提供中英文 README
 
 - **Decision**: GitHub 默认展示中文 `README.md`。英文为同级的 `README.en.md`。两份文件文首互相链接，章节一一对应：产品是只读质量门而不是编程助手；它回答需求符合性、任务完整性、代码风险、测试有效性和审核效率；安装使用 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`，不用 PyPI 包名；本地源码用绝对路径安装后，在不含 `src/specguard` 的目录运行 `specguard version`；审核在被审核仓库中运行。详细步骤指向 `docs/install.md` 和 `specs/001-specguard-quality-gate/quickstart.md`，不复制命令契约和报告契约全文。

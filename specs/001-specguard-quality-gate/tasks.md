@@ -422,3 +422,15 @@ Task: "T054 tests/unit/test_policy.py"
 - [X] T081 把 `docs/install.md` 的安装命令改为 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`，并写明用源码绝对路径执行 `uv tool install --force` 后，在不含 `src/specguard` 的目录运行 `specguard version`；不得再写 `uv tool install specguard`。同步更新 `tests/unit/test_install_entry.py` per plan: GitHub install (contradicts)
 - [X] T082 在仓库根目录添加 Apache-2.0 标准文本 `LICENSE`，版权行写 `Copyright 2026 sl903dj`，并把 `pyproject.toml` 的 `license` 设为 `Apache-2.0` per plan: Apache-2.0 license (missing)
 - [X] T083 添加中文 `README.md` 和英文 `README.en.md`，文首互相链接，写明只读质量门、GitHub 安装、本地 `specguard version` 验证，并链接 `LICENSE`；不得把产品写成编程助手或默认合并门禁 per plan: bilingual README (missing)
+
+---
+
+## Phase 17: 内网离线安装
+
+**Purpose**: 不能访问 GitHub 或 PyPI 的内网电脑，使用外网取得并手工传入的源码和依赖轮子，完全离线安装 `specguard`。
+
+**Independent Test**: `docs/install.md` 列出直接依赖并给出 `uv tool install --offline --no-index --find-links`；中英文 README 指向该节。安装过程不要求内网电脑访问 `github.com` 或 `pypi.org`。
+
+- [X] T084 在 `tests/unit/test_install_entry.py` 中编写失败测试：`docs/install.md` 写明外网克隆 `https://github.com/sl903dj/SpecGuard.git`、手工传入源码和轮子目录，并列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，同时说明传递依赖随轮子目录传入、`pytest` 不是安装命令所需；内网命令包含 `uv tool install --offline --no-index --find-links`。`README.md` 与 `README.en.md` 指向 `docs/install.md` 的离线安装说明
+- [X] T085 在 `docs/install.md` 中按 `specs/001-specguard-quality-gate/quickstart.md` 写明外网准备（`uv lock`、`uv export --frozen --no-dev --no-emit-project`、用临时环境的 `pip download` 生成轮子目录）和内网命令 `uv tool install --offline --no-index --find-links <轮子目录> <源码目录>`。列出 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，写明传递依赖必须在轮子目录中，内网机预先具备 Python 3.11+ 和 `uv`，安装时不访问 `github.com` 或 `pypi.org`
+- [X] T086 [P] 在 `README.md` 和 `README.en.md` 中指向 `docs/install.md` 的离线安装节，保留能访问 GitHub 时的 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`

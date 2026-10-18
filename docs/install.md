@@ -35,6 +35,46 @@ specguard version
 
 `/tmp/specguard-install-check` 里没有 `src/specguard`。`specguard version` 应输出 `0.1.0`。
 
+## 内网离线安装
+
+<a id="offline-install"></a>
+
+内网电脑不能访问 GitHub 或 PyPI 时，不要使用上面的 Git 地址。在能访问外网的电脑上取得源码和依赖轮子，再手工传入内网。内网安装不再访问 `github.com` 或 `pypi.org`。
+
+内网机预先具备 Python 3.11 或更高版本，以及 `uv`。
+
+直接依赖：
+
+- `typer>=0.12`
+- `pydantic>=2`
+- `httpx>=0.27`
+- `pyyaml>=6`
+
+轮子目录必须包含这些包的传递依赖，不能只拷贝上面四个名字。`pytest` 是开发依赖，安装命令不需要它。
+
+外网准备：
+
+```bash
+git clone https://github.com/sl903dj/SpecGuard.git
+cd SpecGuard
+uv lock
+uv export --frozen --no-dev --no-emit-project -o requirements.txt
+uv venv /tmp/specguard-fetch
+uv pip install --python /tmp/specguard-fetch/bin/python pip
+/tmp/specguard-fetch/bin/python -m pip download -r requirements.txt -d /tmp/specguard-wheels
+```
+
+把 `SpecGuard` 源码目录和 `/tmp/specguard-wheels` 手工拷进内网。内网安装：
+
+```bash
+uv tool install --offline --no-index --find-links <轮子目录> <源码目录>
+mkdir -p /tmp/specguard-install-check
+cd /tmp/specguard-install-check
+specguard version
+```
+
+该目录没有 `src/specguard`。`specguard version` 应输出 `0.1.0`。
+
 ## 开发者
 
 开发和测试才使用 SpecGuard 源码检出。在本仓库安装开发依赖并运行测试。不要把这个源码检出复制进被审核仓库。

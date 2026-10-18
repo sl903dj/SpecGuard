@@ -52,3 +52,27 @@ def test_bilingual_readmes_link_install_and_license() -> None:
     assert "quality gate" in english.lower()
     assert "coding assistant" not in english.lower()
     assert "merge gate" not in english.lower()
+
+
+def test_offline_install_lists_dependencies_and_readme_links() -> None:
+    text = (ROOT / "docs" / "install.md").read_text(encoding="utf-8")
+    assert "https://github.com/sl903dj/SpecGuard.git" in text
+    assert "手工" in text
+    assert "typer>=0.12" in text
+    assert "pydantic>=2" in text
+    assert "httpx>=0.27" in text
+    assert "pyyaml>=6" in text
+    assert "传递依赖" in text
+    assert "pytest" in text and "不需要" in text
+    assert "uv lock" in text
+    assert "uv export --frozen --no-dev --no-emit-project" in text
+    assert "pip download" in text
+    assert "uv tool install --offline --no-index --find-links" in text
+    assert "pypi.org" in text
+    assert 'id="offline-install"' in text
+    chinese = (ROOT / "README.md").read_text(encoding="utf-8")
+    english = (ROOT / "README.en.md").read_text(encoding="utf-8")
+    assert "docs/install.md#offline-install" in chinese
+    assert "docs/install.md#offline-install" in english
+    assert 'uv tool install "git+https://github.com/sl903dj/SpecGuard"' in chinese
+    assert 'uv tool install "git+https://github.com/sl903dj/SpecGuard"' in english

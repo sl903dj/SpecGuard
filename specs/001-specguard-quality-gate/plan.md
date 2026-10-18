@@ -1,6 +1,6 @@
 # Implementation Plan: SpecGuard 变更质量守卫
 
-**Branch**: `001-specguard-quality-gate` | **Date**: 2026-10-17 | **Spec**: [spec.md](spec.md)
+**Branch**: `001-specguard-quality-gate` | **Date**: 2026-10-18 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `/specs/001-specguard-quality-gate/spec.md`
 
@@ -12,7 +12,7 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 技术路径：Python 3.11 命令行工具先读取 Git 差异和 OpenSpec，再执行配置中允许的构建与测试，最后才可选地调用内网模型。模型输出在有确定性证据之前只算假设。默认策略是建议模式，不自动合并，也不在历史变更对照完成前充当阻止合并的门禁。选择和理由见 [research.md](research.md)。
 
-使用者把 `specguard` 安装到本机命令路径，再到被审核的 Java 仓库里运行。不把 SpecGuard 源码克隆进该仓库。包不在 PyPI，所以不能使用 `uv tool install specguard`。GitHub 仓库是 `sl903dj/SpecGuard`，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`；安装器把源码拉进自己的工具环境。验证本地源码时，用源码检出的绝对路径执行 `uv tool install --force`，再到一个不含 `src/specguard` 的目录运行 `specguard version`。v0.1 的安装入口是 Python 控制台脚本，不要求单独交付一个原生二进制。SpecGuard 自己的开发和测试仍使用本仓库的源码检出。
+使用者把 `specguard` 安装到本机命令路径，再到被审核的 Java 仓库里运行。不把 SpecGuard 源码克隆进该仓库。包不在 PyPI，所以不能使用 `uv tool install specguard`。能访问 GitHub 时，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。内网电脑不能访问 GitHub 或 PyPI 时，在外网取得源码和依赖轮子，手工拷进内网，再完全离线安装。直接依赖是 Python 3.11 或更高版本上的 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`；随包带走的目录还要包含它们的传递依赖。内网机预先装有 Python 3.11+ 和 `uv`。v0.1 的安装入口是 Python 控制台脚本，不要求单独交付一个原生二进制。SpecGuard 自己的开发和测试仍使用本仓库的源码检出。
 
 交付顺序固定为：配置与报告模型、只读 Git 与 OpenSpec 解析、确定性检查、证据追溯、报告与退出码、内网辅助审查、严格策略信号。辅助审查不能成为前面各步可用的前提。
 
@@ -34,7 +34,7 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 **Performance Goals**: 不含构建和测试时，一次普通服务变更的仓库与需求解析在 30 秒内完成。构建和测试分别服从配置超时，示例上限为构建 600 秒、测试 900 秒。模型上下文默认不超过 50000 个字符。
 
-**Constraints**: 不修改被审核仓库的源文件、OpenSpec 和 Git 历史。使用者不把 SpecGuard 源码克隆进被审核仓库；安装器可以从 GitHub 或本地路径把包装进工具环境。配置无效时在检查前退出。检查状态只能是通过、失败、跳过、错误或超时。未配置内部模型时不访问外部模型。模型假设默认不阻断。不把未发布到 PyPI 的包写成 `uv tool install specguard`。
+**Constraints**: 不修改被审核仓库的源文件、OpenSpec 和 Git 历史。使用者不把 SpecGuard 源码克隆进被审核仓库。能联网时可以从 GitHub 安装；不能访问 GitHub 或 PyPI 时，只使用手工传入的源码和本地依赖目录，安装过程不再访问外网。配置无效时在检查前退出。检查状态只能是通过、失败、跳过、错误或超时。未配置内部模型时不访问外部模型。模型假设默认不阻断。不把未发布到 PyPI 的包写成 `uv tool install specguard`。
 
 **Scale/Scope**: 一次命令审核一个仓库中的一个选定变更。v0.1 不覆盖 Java 以外的项目，不提供审核平台，也不绑定某个编程助手。仓库根目录需要中文 `README.md`、英文 `README.en.md` 和 Apache-2.0 的 `LICENSE`。
 
@@ -72,6 +72,7 @@ Phase 1 的数据模型、命令契约、配置契约和报告契约落实了上
 | 构建隔离用于不可信仓库，失败时检查为错误而不是通过 | 通过 |
 | 命令允许列表阻止模型生成的任意命令 | 通过 |
 | 安装从 GitHub 或本地路径进入工具环境，不把源码放进被审核仓库，也不指向 PyPI | 通过 |
+| 内网离线安装只使用手工传入的源码和依赖目录，安装时不访问 GitHub 或 PyPI | 通过 |
 | 中英文 README 把产品写成质量门，不写成编程助手或默认合并门禁 | 通过 |
 | 维护者把 SpecGuard 自己的功能分支合入 `master`；产品仍不合并被审核仓库 | 通过 |
 
@@ -134,3 +135,4 @@ tests/
 9. 写中文 `README.md` 和英文 `README.en.md`。两份文首互相链接，并写明质量门定位、GitHub 安装、本地安装验证，以及在被审核仓库中运行的最短命令。
 10. 添加根目录 `LICENSE`（Apache-2.0）和 `pyproject.toml` 的 `license = "Apache-2.0"`，并在两份 README 中链接该文件。
 11. 维护者把 `001-specguard-quality-gate` 快进合并到 `master`，并推送 `origin/master`。不使用强制推送。这一步只集成 SpecGuard 自己的仓库，不让产品去合并被审核仓库。
+12. 在 `docs/install.md` 写明内网离线安装：外网取得 GitHub 源码和依赖轮子，手工传入内网；列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，并说明传递依赖随轮子目录一起传入。内网安装使用 `uv tool install --offline --no-index --find-links`。中英文 README 指向这一节。

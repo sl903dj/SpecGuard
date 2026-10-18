@@ -19,7 +19,7 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
-Further install and run steps are in [docs/install.md](docs/install.md).
+Further install and run steps are in [docs/install.md](docs/install.md). When the machine cannot reach GitHub or PyPI, follow [offline install](docs/install.md#offline-install) and carry the source plus dependency wheels in by hand.
 
 ## License
 

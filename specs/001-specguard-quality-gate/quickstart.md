@@ -21,6 +21,31 @@ specguard version
 
 期望：该目录里没有 `src/specguard`；`specguard version` 退出码为 `0`，输出 `0.1.0`。这只证明命令能从本地源码装上并在源码树外运行。
 
+内网电脑不能访问 GitHub 或 PyPI 时，不使用上面的 Git 地址。在外网机器取得源码和依赖轮子，再手工拷进内网。直接依赖是 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`；轮子目录还要包含传递依赖。内网机已有 Python 3.11+ 和 `uv`。
+
+外网准备：
+
+```bash
+git clone https://github.com/sl903dj/SpecGuard.git
+cd SpecGuard
+uv lock
+uv export --frozen --no-dev --no-emit-project -o requirements.txt
+uv venv /tmp/specguard-fetch
+uv pip install --python /tmp/specguard-fetch/bin/python pip
+/tmp/specguard-fetch/bin/python -m pip download -r requirements.txt -d /tmp/specguard-wheels
+```
+
+把 `SpecGuard` 源码目录和 `/tmp/specguard-wheels` 拷进内网。内网安装：
+
+```bash
+uv tool install --offline --no-index --find-links <轮子目录> <源码目录>
+mkdir -p /tmp/specguard-install-check
+cd /tmp/specguard-install-check
+specguard version
+```
+
+期望：安装过程不访问 `github.com` 或 `pypi.org`；`specguard version` 退出码为 `0`，输出 `0.1.0`；该目录没有 `src/specguard`。详细说明以 `docs/install.md` 为准。
+
 安装器把 `specguard` 放到命令路径后，到被审核的 Java 仓库里运行。该仓库需要：
 
 - 可用的 `git`。
