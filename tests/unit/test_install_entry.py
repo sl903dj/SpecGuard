@@ -76,3 +76,14 @@ def test_offline_install_lists_dependencies_and_readme_links() -> None:
     assert "docs/install.md#offline-install" in english
     assert 'uv tool install "git+https://github.com/sl903dj/SpecGuard"' in chinese
     assert 'uv tool install "git+https://github.com/sl903dj/SpecGuard"' in english
+
+
+def test_offline_install_uses_checkout_root_and_setuptools() -> None:
+    text = (ROOT / "docs" / "install.md").read_text(encoding="utf-8")
+    assert "pyproject.toml" in text
+    assert "不要传入 `src/specguard`" in text
+    assert "setuptools>=68" in text
+    assert 'pip download -r requirements.txt "setuptools>=68"' in text
+    assert "build-system" in text
+    assert "<检出根目录>" in text
+    assert "<源码目录>" not in text

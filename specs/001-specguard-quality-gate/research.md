@@ -16,9 +16,9 @@
 
 ## Decision: 内网电脑用手工传入的源码和依赖离线安装
 
-- **Decision**: 不能访问 GitHub 或 PyPI 的内网电脑不执行 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。在一台能访问外网的电脑上克隆 `https://github.com/sl903dj/SpecGuard.git`，导出运行时依赖并下载成轮子目录，再把源码目录和轮子目录手工拷进内网。内网安装命令是 `uv tool install --offline --no-index --find-links <轮子目录> <源码目录>`。装好后到一个不含 `src/specguard` 的目录运行 `specguard version`，期望输出 `0.1.0`。`docs/install.md` 列出直接依赖：`typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`。轮子目录必须同时包含这些包的传递依赖，不能只拷这四个名字。`pytest` 是开发依赖，安装命令时不需要。内网机预先具备 Python 3.11 或更高版本以及 `uv`；这两样不从本次拷贝的 SpecGuard 依赖里安装。中英文 README 指向 `docs/install.md` 的离线安装一节。
-- **Rationale**: 内网机访问不了 `github.com` 时，Git 地址安装会失败。只拷源码仍会在安装时向 PyPI 要 Typer、Pydantic、httpx 和 PyYAML。`--offline` 禁止网络，`--no-index` 不使用默认索引，`--find-links` 只使用手工传入的轮子目录。直接依赖写进安装说明，是为了让传递进来的目录可以被核对；传递依赖随导出结果一起走，避免漏掉间接包。
-- **Alternatives considered**: 继续只写 GitHub 地址，内网机无法执行。把包发布到 PyPI 仍要外网，而且 v0.1 没有选定公开索引。只列出四个直接依赖、不带传递依赖，离线安装会缺包。把 SpecGuard 源码克隆进被审核仓库，违反使用边界。
+- **Decision**: 不能访问 GitHub 或 PyPI 的内网电脑不执行 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。在一台能访问外网的电脑上克隆 `https://github.com/sl903dj/SpecGuard.git`，导出运行时依赖并下载成轮子目录，再额外下载 `setuptools>=68`。把检出根目录和轮子目录手工拷进内网。内网安装命令是 `uv tool install --offline --no-index --find-links <轮子目录> <检出根目录>`。`<检出根目录>` 是含有 `pyproject.toml` 的克隆目录，不是 `src/specguard`。装好后到一个不含 `src/specguard` 的目录运行 `specguard version`，期望输出 `0.1.0`。`docs/install.md` 列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，并列出构建依赖 `setuptools>=68`。轮子目录必须同时包含运行时传递依赖和 `setuptools`。`pytest` 是开发依赖，安装命令时不需要。内网机预先具备 Python 3.11 或更高版本以及 `uv`。中英文 README 指向 `docs/install.md` 的离线安装一节。
+- **Rationale**: 内网机访问不了 `github.com` 时，Git 地址安装会失败。只拷源码仍会在安装时向 PyPI 要 Typer、Pydantic、httpx 和 PyYAML。`--offline` 禁止网络，`--no-index` 不使用默认索引，`--find-links` 只使用手工传入的轮子目录。`uv export --no-dev --no-emit-project` 不包含 `[build-system] requires`。从检出根目录安装会本地构建，缺少 `setuptools>=68` 时离线解析失败。`src/specguard` 没有 `pyproject.toml`，传给 `uv tool install` 会被拒绝。
+- **Alternatives considered**: 继续只写 GitHub 地址，内网机无法执行。把包发布到 PyPI 仍要外网。在外网先 `uv build --wheel`、内网只安装 wheel，可以不携带 `setuptools`，但当前流程仍从检出根目录安装，所以轮子目录要带上构建依赖。把 `src/specguard` 当作项目目录会安装失败。把 SpecGuard 源码克隆进被审核仓库，违反使用边界。
 
 ## Decision: 仓库根目录提供中英文 README
 

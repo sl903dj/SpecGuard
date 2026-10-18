@@ -1,6 +1,6 @@
 # Contract: 命令行
 
-SpecGuard 是本地只读命令。使用者安装 `specguard` 到命令路径，在被审核仓库里运行；该仓库不需要包含 SpecGuard 源码。包不在 PyPI。能访问 GitHub 时，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。不能访问 GitHub 或 PyPI 时，用手工传入的源码目录和依赖轮子目录执行 `uv tool install --offline --no-index --find-links <轮子目录> <源码目录>`。直接依赖是 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，传递依赖在轮子目录中。验证时在不含 `src/specguard` 的目录执行 `specguard version`。v0.1 的安装入口是 Python 控制台脚本，不要求单独的原生二进制。v0.1 不提供网页，也不替调用方合并代码。退出码是给人和以后的包装层看的信号。
+SpecGuard 是本地只读命令。使用者安装 `specguard` 到命令路径，在被审核仓库里运行；该仓库不需要包含 SpecGuard 源码。包不在 PyPI。能访问 GitHub 时，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。不能访问 GitHub 或 PyPI 时，用手工传入的检出根目录和依赖轮子目录执行 `uv tool install --offline --no-index --find-links <轮子目录> <检出根目录>`。检出根目录含有 `pyproject.toml`，不是 `src/specguard`。直接依赖是 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`。轮子目录还包含传递依赖和构建依赖 `setuptools>=68`。验证时在不含 `src/specguard` 的目录执行 `specguard version`。v0.1 的安装入口是 Python 控制台脚本，不要求单独的原生二进制。v0.1 不提供网页，也不替调用方合并代码。退出码是给人和以后的包装层看的信号。
 
 ## 命令
 

@@ -52,6 +52,8 @@ specguard version
 
 轮子目录必须包含这些包的传递依赖，不能只拷贝上面四个名字。`pytest` 是开发依赖，安装命令不需要它。
 
+从检出根目录安装时，`uv` 会按 `pyproject.toml` 的 `[build-system] requires` 本地构建。构建依赖是 `setuptools>=68`，它不是运行时依赖，`uv export` 不会把它写进 `requirements.txt`，必须单独下载进轮子目录。
+
 外网准备：
 
 ```bash
@@ -61,13 +63,13 @@ uv lock
 uv export --frozen --no-dev --no-emit-project -o requirements.txt
 uv venv /tmp/specguard-fetch
 uv pip install --python /tmp/specguard-fetch/bin/python pip
-/tmp/specguard-fetch/bin/python -m pip download -r requirements.txt -d /tmp/specguard-wheels
+/tmp/specguard-fetch/bin/python -m pip download -r requirements.txt "setuptools>=68" -d /tmp/specguard-wheels
 ```
 
-把 `SpecGuard` 源码目录和 `/tmp/specguard-wheels` 手工拷进内网。内网安装：
+把克隆得到的 `SpecGuard` 目录和 `/tmp/specguard-wheels` 手工拷进内网。`<检出根目录>` 是含有 `pyproject.toml` 的那一层。不要传入 `src/specguard`，该目录没有 `pyproject.toml`。内网安装：
 
 ```bash
-uv tool install --offline --no-index --find-links <轮子目录> <源码目录>
+uv tool install --offline --no-index --find-links <轮子目录> <检出根目录>
 mkdir -p /tmp/specguard-install-check
 cd /tmp/specguard-install-check
 specguard version

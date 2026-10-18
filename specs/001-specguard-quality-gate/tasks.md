@@ -434,3 +434,14 @@ Task: "T054 tests/unit/test_policy.py"
 - [X] T084 在 `tests/unit/test_install_entry.py` 中编写失败测试：`docs/install.md` 写明外网克隆 `https://github.com/sl903dj/SpecGuard.git`、手工传入源码和轮子目录，并列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，同时说明传递依赖随轮子目录传入、`pytest` 不是安装命令所需；内网命令包含 `uv tool install --offline --no-index --find-links`。`README.md` 与 `README.en.md` 指向 `docs/install.md` 的离线安装说明
 - [X] T085 在 `docs/install.md` 中按 `specs/001-specguard-quality-gate/quickstart.md` 写明外网准备（`uv lock`、`uv export --frozen --no-dev --no-emit-project`、用临时环境的 `pip download` 生成轮子目录）和内网命令 `uv tool install --offline --no-index --find-links <轮子目录> <源码目录>`。列出 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，写明传递依赖必须在轮子目录中，内网机预先具备 Python 3.11+ 和 `uv`，安装时不访问 `github.com` 或 `pypi.org`
 - [X] T086 [P] 在 `README.md` 和 `README.en.md` 中指向 `docs/install.md` 的离线安装节，保留能访问 GitHub 时的 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`
+
+---
+
+## Phase 18: 离线安装路径与构建依赖
+
+**Purpose**: 离线安装传入含 `pyproject.toml` 的检出根目录，并把构建依赖 `setuptools>=68` 放进轮子目录。
+
+**Independent Test**: `docs/install.md` 写明不要把 `src/specguard` 传给 `uv tool install`，并且下载命令包含 `setuptools>=68`。
+
+- [X] T087 在 `tests/unit/test_install_entry.py` 中编写失败测试：`docs/install.md` 写明离线安装路径是含 `pyproject.toml` 的检出根目录，不要传入 `src/specguard`；轮子下载包含 `setuptools>=68`
+- [X] T088 在 `docs/install.md` 中把离线安装参数从含糊的源码目录改成含 `pyproject.toml` 的检出根目录，并在 `pip download` 中加入 `"setuptools>=68"`，说明它来自 `[build-system] requires`，不是运行时依赖

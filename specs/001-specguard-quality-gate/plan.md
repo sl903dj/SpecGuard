@@ -12,7 +12,7 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 技术路径：Python 3.11 命令行工具先读取 Git 差异和 OpenSpec，再执行配置中允许的构建与测试，最后才可选地调用内网模型。模型输出在有确定性证据之前只算假设。默认策略是建议模式，不自动合并，也不在历史变更对照完成前充当阻止合并的门禁。选择和理由见 [research.md](research.md)。
 
-使用者把 `specguard` 安装到本机命令路径，再到被审核的 Java 仓库里运行。不把 SpecGuard 源码克隆进该仓库。包不在 PyPI，所以不能使用 `uv tool install specguard`。能访问 GitHub 时，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。内网电脑不能访问 GitHub 或 PyPI 时，在外网取得源码和依赖轮子，手工拷进内网，再完全离线安装。直接依赖是 Python 3.11 或更高版本上的 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`；随包带走的目录还要包含它们的传递依赖。内网机预先装有 Python 3.11+ 和 `uv`。v0.1 的安装入口是 Python 控制台脚本，不要求单独交付一个原生二进制。SpecGuard 自己的开发和测试仍使用本仓库的源码检出。
+使用者把 `specguard` 安装到本机命令路径，再到被审核的 Java 仓库里运行。不把 SpecGuard 源码克隆进该仓库。包不在 PyPI，所以不能使用 `uv tool install specguard`。能访问 GitHub 时，安装命令是 `uv tool install "git+https://github.com/sl903dj/SpecGuard"`。内网电脑不能访问 GitHub 或 PyPI 时，在外网取得源码和依赖轮子，手工拷进内网，再完全离线安装。传给 `uv tool install` 的目录是含 `pyproject.toml` 的检出根目录，不是 `src/specguard`。直接依赖是 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，传递依赖和构建依赖 `setuptools>=68` 都放进轮子目录。内网机预先装有 Python 3.11+ 和 `uv`。v0.1 的安装入口是 Python 控制台脚本，不要求单独交付一个原生二进制。SpecGuard 自己的开发和测试仍使用本仓库的源码检出。
 
 交付顺序固定为：配置与报告模型、只读 Git 与 OpenSpec 解析、确定性检查、证据追溯、报告与退出码、内网辅助审查、严格策略信号。辅助审查不能成为前面各步可用的前提。
 
@@ -136,3 +136,4 @@ tests/
 10. 添加根目录 `LICENSE`（Apache-2.0）和 `pyproject.toml` 的 `license = "Apache-2.0"`，并在两份 README 中链接该文件。
 11. 维护者把 `001-specguard-quality-gate` 快进合并到 `master`，并推送 `origin/master`。不使用强制推送。这一步只集成 SpecGuard 自己的仓库，不让产品去合并被审核仓库。
 12. 在 `docs/install.md` 写明内网离线安装：外网取得 GitHub 源码和依赖轮子，手工传入内网；列出直接依赖 `typer>=0.12`、`pydantic>=2`、`httpx>=0.27`、`pyyaml>=6`，并说明传递依赖随轮子目录一起传入。内网安装使用 `uv tool install --offline --no-index --find-links`。中英文 README 指向这一节。
+13. 离线安装的项目路径是含 `pyproject.toml` 的检出根目录，文档写明不要传入 `src/specguard`。轮子目录额外包含构建依赖 `setuptools>=68`，因为从源码目录安装会按 `[build-system] requires` 本地构建。
