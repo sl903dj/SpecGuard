@@ -122,6 +122,12 @@
 - **Rationale**: 现在的安装文档只并列 `version`、`config validate` 和 `review` 三条命令，没有说明要站在哪个目录、配置至少写什么、未提交改动会停在哪里、报告文件在哪、退出码 0 仍可能有发现。空目录只证明命令已安装，继续在那里审核会因为「当前目录不在版本库中」而退出 4。把使用步骤和安装步骤分开，避免把验证用的空目录写成日常工作目录。
 - **Alternatives considered**: 继续把三条命令留在 `docs/install.md`，读者仍然不知道失败后看什么。把 quickstart 的夹具场景当作使用者文档，会要求对方进入 SpecGuard 源码检出。第一次使用就写 `--mode assisted` 或 `--policy strict`，会把可选能力和默认建议模式混成必经步骤。另写一份英文长步骤会和现有中文安装文档分成两套，当前只在英文 README 里指向中文步骤。
 
+## Decision: 用一份文档提供三档 specguard.yaml 模板
+
+- **Decision**: 使用者复制的配置集中在中文 `docs/config-templates.md`，里面有三份完整且能通过配置模型校验的 YAML，标题分别为最小、标准、推荐。`docs/usage.md` 第 4 步链接该文档。命令不自动生成或加载这些文件，也不新增 `config init`。三档都写明 `version: 1`、可替换的 `git.base`、`review.mode: static`、`review.policy: advisory`、`review.llm_findings_block: false`、`llm.enabled: false`、`llm.external_fallback: false`。最小档不启用 `checks`。标准档启用并要求 `./mvnw -q -DskipTests package`（超时 600 秒）和 `./mvnw -q test`（超时 900 秒），并写明 `security.isolate_builds: true`。使用 Gradle 时，使用者只把这两条命令换成 `./gradlew assemble` 和 `./gradlew test`，同一份文件里不同时保留两套构建命令。推荐档包含标准档的构建和测试，再启用但不必需 `checkstyle`、`spotbugs`、`pmd`，命令分别是这三个程序名。工具不在 PATH 上时，这三项为 `SKIPPED`。JaCoCo 和 ArchUnit 不写入推荐档，因为 `jacoco` 和 `archunit` 不是允许的命令程序名，写入会使整份配置无效。严格模式和内网 `llm.base_url` 不出现在任一档的生效字段里。
+- **Rationale**: 使用说明里的四行最小配置能够开始一次不跑构建的审核，但不能直接复制出带构建、测试和静态检查的文件。配置契约只有字段表。测试夹具里的 `specguard.yaml` 超时和检查开关是为测试服务的，复制到被审核仓库会得到错误的检查行为。三档分开后，第一次使用仍可以选最小档，需要构建证据时选标准档，本机有静态分析工具时选推荐档。推荐档把工具标成非必需，缺工具时不会把整次审核变成必需检查失败。
+- **Alternatives considered**: 继续只在使用说明里放最小片段，读者仍要自己拼检查命令。做三个独立文件会让「一份模板」拆开，链接也更容易漏。把严格策略或辅助审查放进推荐档，会把可选能力写成默认文件，违反建议模式和禁止外部回退。为 JaCoCo 或 ArchUnit 编一条不在允许列表中的命令，配置校验会直接拒绝。新增 `specguard config init` 会扩大命令面，复制文档已经能完成同一件事。
+
 ## Decision: 不可信仓库的构建放进隔离工作区
 
 - **Decision**: 默认文档说明 Maven 和 Gradle 会执行项目自己的插件。配置 `isolate_builds: true` 时，构建在仓库的临时副本中运行，不把构建写入原工作区。隔离失败时对应检查为 `ERROR`，不是 `PASS`。

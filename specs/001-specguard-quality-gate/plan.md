@@ -18,6 +18,8 @@ SpecGuard v0.1 是一个本地只读的变更质量门。工程师对一份 Open
 
 安装完成之后的日常使用写在 `docs/usage.md`。步骤从确认 `specguard version` 开始，接着进入被审核的 Git 仓库、准备 OpenSpec 变更、编写最小 `specguard.yaml`、校验配置、处理未提交改动、运行静态建议审核、按报告阅读结论，最后由工程师决定是否接受变更。严格模式和内网辅助审查只作为后续可选步骤。安装验证用的空目录不是使用地点。
 
+被审核仓库要复制的配置写在一份中文模板 `docs/config-templates.md` 里，分最小、标准、推荐三档。三档都是 `static` 加 `advisory`。标准档启用并要求 Maven 构建和测试。推荐档在标准档上增加 Checkstyle、SpotBugs 和 PMD，这三项启用但不是必需。模板不会被命令自动加载，使用者复制其中一档到仓库根的 `specguard.yaml`。
+
 仓库根目录提供中文 `README.md` 和英文 `README.en.md`，文首互相链接。两份说明同一件事：SpecGuard 是只读质量门，从 GitHub 安装命令，在被审核仓库里运行。许可证是 Apache-2.0，放在根目录 `LICENSE`，并写入 `pyproject.toml`。
 
 ## Technical Context
@@ -78,6 +80,7 @@ Phase 1 的数据模型、命令契约、配置契约和报告契约落实了上
 | 中英文 README 把产品写成质量门，不写成编程助手或默认合并门禁 | 通过 |
 | 维护者把 SpecGuard 自己的功能分支合入 `master`；产品仍不合并被审核仓库 | 通过 |
 | 使用说明按只读审核步骤书写，第一次使用停在静态建议模式，不写成编程助手或默认合并门禁 | 通过 |
+| 配置模板三档都保持建议模式，不把模型假设或严格策略写成默认文件 | 通过 |
 
 设计后仍然没有需要豁免的偏离。许可证为 Apache-2.0，不改变只读质量门的行为。
 
@@ -142,3 +145,4 @@ tests/
 13. 离线安装的项目路径是含 `pyproject.toml` 的检出根目录，文档写明不要传入 `src/specguard`。轮子目录额外包含构建依赖 `setuptools>=68`，因为从源码目录安装会按 `[build-system] requires` 本地构建。
 14. `docs/install.md` 在 `specguard version` 之前说明：`mkdir` 和 `cd` 是为了离开源码检出，到一个空目录里运行已经安装的命令。这个目录不是安装位置，命令也不会往里面写文件。
 15. 新增中文 `docs/usage.md`，按 [命令契约](contracts/cli.md) 的使用顺序写安装之后的详细步骤。`docs/install.md` 的「使用者」一节改为指向该文件。中文 `README.md` 和英文 `README.en.md` 都链接 `docs/usage.md`。英文 README 不另写一份长步骤，只说明详细步骤在中文文档。第一次使用停在 `--mode static --policy advisory`。
+16. 新增中文 `docs/config-templates.md`，按 [配置契约](contracts/config.md) 提供最小、标准、推荐三档完整 YAML。`docs/usage.md` 第 4 步链接该文件。三档都保持 `review.mode: static`、`review.policy: advisory`、`review.llm_findings_block: false`、`llm.external_fallback: false`。不新增生成配置的命令。

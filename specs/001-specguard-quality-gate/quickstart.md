@@ -178,3 +178,17 @@ specguard review --policy strict --mode static
 - 文档写明工程师决定是否接受变更，SpecGuard 不合并该仓库。
 - 文档不把产品写成编程助手，也不把默认策略写成合并门禁。
 - 英文 README 链接该中文文档，不另写一份英文长步骤。
+
+## 13. 配置模板
+
+`docs/config-templates.md` 存在，并包含最小、标准、推荐三份完整 YAML。`docs/usage.md` 第 4 步链接该文件。
+
+期望：
+
+- 三份 YAML 都能被配置模型接受。
+- 三份都写明 `review.mode: static`、`review.policy: advisory`、`review.llm_findings_block: false`、`llm.external_fallback: false`。
+- 最小档没有 `checks`。
+- 标准档的构建命令是 `./mvnw -q -DskipTests package`，测试命令是 `./mvnw -q test`，并写明 Gradle 替换命令。
+- 推荐档包含标准档的构建和测试，且 `checkstyle`、`spotbugs`、`pmd` 为 `enabled: true`、`required: false`。
+- 三档的生效字段里没有 `policy: strict`，也没有 `llm.base_url`。
+- 文档说明模板要复制为仓库根的 `specguard.yaml`，命令不会自动加载该文档。

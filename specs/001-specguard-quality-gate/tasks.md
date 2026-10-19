@@ -468,3 +468,15 @@ Task: "T054 tests/unit/test_policy.py"
 - [X] T091 在 `tests/unit/test_usage_doc.py` 中编写失败测试：`docs/usage.md` 按此顺序出现 `specguard version`、含 `.git` 的被审核仓库、`openspec/changes/`、`version: 1`、`git.base`、`specguard config validate --config specguard.yaml`、未提交改动时停止审核、`specguard review --config specguard.yaml --mode static --policy advisory`、`.specguard/reports`，以及指向 `docs/report-interpretation.md` 的链接。`--policy strict` 和 `--mode assisted` 都在该静态建议命令之后，并写明可选。文档写明空目录只用于安装验证，审核在被审核仓库中运行；工程师决定是否接受变更，SpecGuard 不合并该仓库。文档不出现「编程助手」，也不把默认策略写成阻止合并的门禁。`docs/install.md` 的「使用者」一节、`README.md` 和 `README.en.md` 都包含 `docs/usage.md`。`README.en.md` 不包含 `specguard review --config specguard.yaml --mode static --policy advisory`
 - [X] T092 [P] 按 `specs/001-specguard-quality-gate/contracts/cli.md` 的「安装之后的使用顺序」编写 `docs/usage.md`。九步都写命令、成功时看到什么、失败时的退出码和下一步。最小配置只要求 `version: 1` 和可解析的 `git.base`，并说明 `git.base` 写成 `main` 时要换成该仓库真实基线。`--config` 必须显式传入。建议模式下报告可以有 `FAIL` 而进程仍退出 `0`。报告默认路径是 `.specguard/reports/<变更名>-<目标提交前 12 位>.md` 与同名 `.json`。状态词不在本文重定义，改为链接 `docs/report-interpretation.md`。严格模式和内网辅助审查放在工程师决定之后，标明可选：前者把 `--policy advisory` 换成 `--policy strict`；后者先配置内网 `llm.base_url` 再用 `--mode assisted`
 - [X] T093 [P] 把 `docs/install.md` 的「使用者」一节改成指向 `docs/usage.md`，不再在安装文档里重复完整审核步骤。在 `README.md` 和 `README.en.md` 的安装节之后链接 `docs/usage.md`。英文 README 只说明详细步骤在该中文文档，不另写英文长步骤
+
+---
+
+## Phase 21: 配置模板
+
+**Purpose**: 用一份中文文档给出可复制的最小、标准、推荐三档 `specguard.yaml`。三档都保持静态建议模式。
+
+**Independent Test**: `docs/config-templates.md` 中的三份 YAML 都能通过配置模型校验。最小档没有检查，标准档要求 Maven 构建和测试，推荐档把 Checkstyle、SpotBugs、PMD 设为启用但非必需。`docs/usage.md` 第 4 步链接该文档。
+
+- [X] T094 在 `tests/unit/test_config_templates.py` 中编写失败测试：解析 `docs/config-templates.md` 里按顺序出现的三份 YAML，并用 `specguard.config.models.SpecGuardConfig` 校验。三份的 `review.mode` 为 `static`，`review.policy` 为 `advisory`，`review.llm_findings_block` 为 false，`llm.external_fallback` 为 false，且 YAML 中没有 `llm.base_url`。第一份没有 `checks`。第二份 `checks.build.command` 为 `./mvnw -q -DskipTests package`，`checks.tests.command` 为 `./mvnw -q test`，两者 `enabled` 与 `required` 都为 true。第三份包含这两条命令，且 `checks.checkstyle`、`checks.spotbugs`、`checks.pmd` 的 `enabled` 为 true、`required` 为 false、`command` 分别为 `checkstyle`、`spotbugs`、`pmd`。文档写明复制为仓库根 `specguard.yaml`、命令不自动加载该文档，并写明 Gradle 替换命令 `./gradlew assemble` 与 `./gradlew test`。`docs/usage.md` 的「编写最小配置」一节包含 `docs/config-templates.md`
+- [X] T095 [P] 按 `specs/001-specguard-quality-gate/contracts/config.md` 的「配置模板」编写 `docs/config-templates.md`。三档标题为最小、标准、推荐，YAML 与契约中的三份代码块一致。说明把 `git.base` 换成该仓库能解析的版本后，复制为仓库根的 `specguard.yaml`。说明命令不会自动加载该文档。标准档写明 Gradle 时只把构建和测试命令换成 `./gradlew assemble` 与 `./gradlew test`，同一份文件不保留两套构建命令。推荐档写明工具不存在时 Checkstyle、SpotBugs、PMD 为 `SKIPPED`
+- [X] T096 [P] 在 `docs/usage.md` 的「编写最小配置」一节链接 `docs/config-templates.md`，并说明最小档只适合不跑构建的审核，需要构建和测试时复制标准档，本机有静态分析工具时复制推荐档
