@@ -54,9 +54,10 @@ SpecGuard MUST 只做变更质量审核，MUST NOT 充当另一个 AI 编程助�
 
 ## 安全与范围约束
 
-- v0.1 MUST 只审核已用 OpenSpec 管理需求、并用版本库管理代码的 Java 服务端变更。超出该范围时 MUST 明确说明不支持，MUST NOT 假装已经覆盖。
-- 存在多个进行中的变更且没有选择时，系统 MUST 要求明确选择，或遵循已配置的选择策略，MUST NOT 擅自挑选。
-- 找不到需求规范时，MUST 说明基于需求的审核不可用，MUST NOT 宣称需求符合性已经通过。
+- 系统 MUST 只审核用版本库管理代码的 Java 服务端变更。超出该范围时 MUST 明确说明不支持，MUST NOT 假装已经覆盖。
+- 需求来源 MUST 是一个 OpenSpec 变更，或一个 Spec Kit 功能目录。一次审核 MUST 只使用其中一个来源。
+- 两种来源同时存在，或多个进行中的变更、多个 Spec Kit 功能都没有明确选择时，系统 MUST 要求明确选择，或遵循已配置的选择策略，MUST NOT 擅自挑选。`.specify/feature.json` MUST NOT 单独充当这次选择。
+- 找不到所选需求规范时，MUST 说明基于需求的审核不可用，MUST NOT 宣称需求符合性已经通过。
 - 对不可信仓库，可能执行项目脚本的构建 MUST 能在隔离工作区中运行，并 MUST 说明这一风险。
 - 系统 MUST NOT 访问生产数据或生产控制能力。
 - 报告 MUST 同时提供人类可读版本和结构稳定的结构化版本，并记录所审核版本、所选变更、配置版本和可得的工具版本。
@@ -89,4 +90,4 @@ SpecGuard MUST 只做变更质量审核，MUST NOT 充当另一个 AI 编程助�
 - 每次实现或审核 SpecGuard 变更时，MUST 检查上述原则是否仍被遵守。
 - 无法遵守时，MUST 在变更说明中写出偏离、原因和补救，MUST NOT 把偏离写成已符合。
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-16
+**Version**: 1.1.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-23
