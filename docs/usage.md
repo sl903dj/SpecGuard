@@ -94,3 +94,9 @@ SpecGuard 不接受、不拒绝、也不合并变更。是否接受由工程师�
 把第 7 步的 `--policy advisory` 换成 `--policy strict` 时，只有已确认的确定性失败才会退出 `2`。模型假设不单独造成阻断。
 
 辅助审查必须先在配置里启用 `llm` 并填写内网 `llm.base_url`，再使用 `--mode assisted`。未配置模型时保持静态模式。
+
+## Spec Kit 需求
+
+被审核仓库如果使用 Spec Kit，需求在 `specs/<编号-名称>/spec.md`，任务在同目录的 `tasks.md`。SpecGuard 只读这些文件，不运行 Spec Kit 命令。
+
+只有一个这样的功能目录时，可以直接运行第 7 步的审核命令。有多个功能目录时加上 `--feature <目录名>`。OpenSpec 变更和 Spec Kit 功能同时存在时，在配置里写 `requirements.source` 为 `openspec` 或 `speckit`，否则审核退出 `4` 并且不写报告。

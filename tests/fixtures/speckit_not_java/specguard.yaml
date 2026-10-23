@@ -1,0 +1,29 @@
+version: 1
+requirements:
+  source: speckit
+speckit:
+  root: specs
+git:
+  base: main
+  target: HEAD
+review:
+  mode: static
+  policy: advisory
+  llm_findings_block: false
+checks:
+  build:
+    enabled: false
+    required: false
+  tests:
+    enabled: false
+    required: false
+llm:
+  enabled: false
+  external_fallback: false
+security:
+  isolate_builds: false
+report:
+  formats:
+    - markdown
+    - json
+  output_dir: .specguard/reports

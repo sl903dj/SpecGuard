@@ -34,6 +34,7 @@ def validate(config: Path = typer.Option(..., "--config", exists=True, dir_okay=
 def _apply_overrides(
     loaded: SpecGuardConfig,
     change: str | None,
+    feature: str | None,
     base: str | None,
     target: str | None,
     include_worktree: bool,
@@ -45,6 +46,8 @@ def _apply_overrides(
     data = loaded.model_dump()
     if change is not None:
         data["openspec"]["change"] = change
+    if feature is not None:
+        data["speckit"]["feature"] = feature
     if base is not None:
         data["git"]["base"] = base
     if target is not None:
@@ -69,6 +72,7 @@ def _apply_overrides(
 def review(
     config: Path = typer.Option(..., "--config", exists=True, dir_okay=False),
     change: str | None = typer.Option(None, "--change"),
+    feature: str | None = typer.Option(None, "--feature"),
     base: str | None = typer.Option(None, "--base"),
     target: str | None = typer.Option(None, "--target"),
     include_worktree: bool = typer.Option(False, "--include-worktree"),
@@ -82,6 +86,7 @@ def review(
         loaded = _apply_overrides(
             load_config(config),
             change,
+            feature,
             base,
             target,
             include_worktree,
@@ -90,7 +95,7 @@ def review(
             formats,
             output,
         )
-        report, code = run_review(loaded, config)
+        report, code = run_review(loaded, config, cli_change=change, cli_feature=feature)
     except (ConfigError, UsageError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(USAGE) from exc

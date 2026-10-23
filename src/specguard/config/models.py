@@ -22,6 +22,15 @@ class OpenSpecConfig(_Strict):
     validate_before_review: bool = False
 
 
+class RequirementsConfig(_Strict):
+    source: Literal["auto", "openspec", "speckit"] = "auto"
+
+
+class SpecKitConfig(_Strict):
+    root: str = "specs"
+    feature: str | None = None
+
+
 class GitConfig(_Strict):
     base: str
     target: str = "HEAD"
@@ -146,6 +155,8 @@ class SpecGuardConfig(_Strict):
     version: Literal[1]
     project: ProjectConfig = Field(default_factory=ProjectConfig)
     openspec: OpenSpecConfig = Field(default_factory=OpenSpecConfig)
+    requirements: RequirementsConfig = Field(default_factory=RequirementsConfig)
+    speckit: SpecKitConfig = Field(default_factory=SpecKitConfig)
     git: GitConfig
     review: ReviewConfig = Field(default_factory=ReviewConfig)
     checks: ChecksConfig = Field(default_factory=ChecksConfig)

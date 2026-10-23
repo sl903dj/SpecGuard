@@ -8,6 +8,10 @@
 
 ```yaml
 version: 1
+requirements:
+  source: auto
+speckit:
+  root: specs
 git:
   base: main
   target: HEAD
@@ -26,6 +30,10 @@ llm:
 
 ```yaml
 version: 1
+requirements:
+  source: auto
+speckit:
+  root: specs
 git:
   base: main
   target: HEAD
@@ -67,6 +75,10 @@ Gradle 仓库把这两条命令换成 `./gradlew assemble` 和 `./gradlew test`�
 
 ```yaml
 version: 1
+requirements:
+  source: auto
+speckit:
+  root: specs
 git:
   base: main
   target: HEAD
@@ -116,3 +128,5 @@ report:
 ```
 
 JaCoCo 和 ArchUnit 不列入推荐档。`jacoco` 和 `archunit` 不是允许的命令程序名。
+
+`requirements.source` 默认是 `auto`。只有一种需求来源时可以不写。OpenSpec 和 Spec Kit 同时存在时，把它写成 `openspec` 或 `speckit`。多个 Spec Kit 功能时再增加 `speckit.feature`，值是目录名，例如 `001-sample`。这三档不把 `review.policy` 改成 `strict`，也不填写 `llm.base_url`。

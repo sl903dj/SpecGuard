@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from specguard.config.models import ReviewConfig
 from specguard.llm.redact import merge_redactions, redact
 from specguard.models.entities import ChangedFile, CheckResult, Finding
@@ -35,10 +37,17 @@ def error_dimensions(message: str) -> list[CheckResult]:
     ]
 
 
+def is_reviewed_principle(path: str) -> bool:
+    parts = [part for part in Path(path).as_posix().split("/") if part not in {"", "."}]
+    return tuple(parts[-3:]) == (".specify", "memory", "constitution.md")
+
+
 def build_context(files: list[ChangedFile], read_text, max_chars: int) -> tuple[str, bool, list[dict]]:
     chunks: list[str] = []
     notes: list[dict] = []
     for item in files:
+        if is_reviewed_principle(item.path):
+            continue
         text = read_text(item.path) if read_text else ""
         cleaned, file_notes = redact(text)
         notes.extend(file_notes)

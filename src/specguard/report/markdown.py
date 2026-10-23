@@ -12,9 +12,13 @@ def render_markdown(report: ReviewReport) -> str:
         "",
         _status_heading(report),
         "",
+    ]
+    if report.metadata.change:
+        lines.extend([f"**所选**: {report.metadata.change}", ""])
+    lines.extend([
         "## 需要人工审核",
         "",
-    ]
+    ])
     if report.summary.needs_human_review:
         lines.append("有证据不足、含糊需求、模型假设或互相冲突的结论，需要工程师复核。")
     else:
@@ -22,6 +26,8 @@ def render_markdown(report: ReviewReport) -> str:
     lines.extend(["", "## 需求覆盖", ""])
     if not report.artifacts.available:
         lines.append("基于需求的审核不可用。")
+    if report.artifacts.missing:
+        lines.append("缺失工件: " + "、".join(report.artifacts.missing))
     lines.append(f"- 直接证据: {report.summary.direct_count}")
     lines.append(f"- 仅有推断: {report.summary.inferred_count}")
     lines.append(f"- 证据不足: {report.summary.insufficient_count}")

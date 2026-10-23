@@ -20,12 +20,16 @@ from specguard.models.entities import (
     Metadata,
     RedactionNote,
     PolicyView,
+    Requirement,
     ReviewReport,
     Summary,
+    TaskItem,
 )
 from specguard.models.status import CheckStatus, ReviewStatus
-from specguard.openspec.discover import find_openspec_root, select_change
+from specguard.openspec.discover import active_changes, find_openspec_root, select_change
 from specguard.openspec.parser import load_change
+from specguard.speckit.discover import feature_json_hint, list_features, select_feature
+from specguard.speckit.parser import load_feature
 from specguard.report.json_report import render_json
 from specguard.report.markdown import render_markdown
 from specguard.report.paths import resolve_report_dir
@@ -33,6 +37,7 @@ from specguard.report.snippets import limited_snippets
 from specguard.review.assisted import (
     build_context,
     error_dimensions,
+    is_reviewed_principle,
     merge_llm_output,
     review_untrusted,
     skipped_dimensions,
@@ -127,7 +132,61 @@ def _unique(path: Path) -> Path:
         index += 1
 
 
-def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = None) -> tuple[ReviewReport, int]:
+def _load_requirements(
+    root: Path,
+    config: SpecGuardConfig,
+    cli_change: str | None,
+    cli_feature: str | None,
+) -> tuple[ArtifactReport, list[Requirement], list[TaskItem], str | None]:
+    speckit_names = list_features(root, config.speckit.root)
+    openspec_root = find_openspec_root(root, config.openspec.root)
+    openspec_names = active_changes(openspec_root) if openspec_root else []
+    source = config.requirements.source
+    if source == "auto":
+        if speckit_names and openspec_names:
+            raise UsageError("同时存在 openspec 和 speckit 需求来源，请指定 requirements.source")
+        if speckit_names:
+            source = "speckit"
+        elif openspec_names:
+            source = "openspec"
+        else:
+            source = "none"
+    if source == "speckit":
+        if cli_change:
+            raise UsageError("来源是 speckit 时不能使用 --change")
+        selected = select_feature(speckit_names, config.speckit.feature, feature_json_hint(root))
+        if selected is None:
+            return ArtifactReport(available=False, selected_change=None), [], [], None
+        return (*load_feature(root / config.speckit.root / selected, selected), selected)
+    if source == "openspec":
+        if cli_feature:
+            raise UsageError("来源是 openspec 时不能使用 --feature")
+        if openspec_root is None:
+            return ArtifactReport(available=False, selected_change=None), [], [], None
+        selected = select_change(
+            openspec_root,
+            config.openspec.change,
+            config.openspec.require_change_selection,
+        )
+        if selected is None:
+            return ArtifactReport(available=False, selected_change=None), [], [], None
+        artifacts, requirements, tasks = load_change(
+            openspec_root,
+            selected,
+            config.openspec.include_main_specs,
+        )
+        return artifacts, requirements, tasks, selected
+    return ArtifactReport(available=False, selected_change=None), [], [], None
+
+
+def run_review(
+    config: SpecGuardConfig,
+    config_path: Path,
+    repo: Path | None = None,
+    *,
+    cli_change: str | None = None,
+    cli_feature: str | None = None,
+) -> tuple[ReviewReport, int]:
     started = _now()
     root = discover_root(repo or (config_path.parent / config.project.root))
     base = resolve_revision(root, config.git.base)
@@ -137,17 +196,10 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
     start_head = read_head(root)
     report_dir = resolve_report_dir(root, config.report.output_dir)
     changed = collect_changes(root, base, target, config.git.include_worktree)
-    openspec_root = find_openspec_root(root, config.openspec.root)
-    selected = select_change(openspec_root, config.openspec.change, config.openspec.require_change_selection)
     limitations: list[str] = []
-    if openspec_root is None or selected is None:
-        artifacts = ArtifactReport(available=False, selected_change=selected)
-        requirements, tasks = [], []
+    artifacts, requirements, tasks, selected = _load_requirements(root, config, cli_change, cli_feature)
+    if not artifacts.available:
         limitations.append("基于需求的审核不可用")
-    else:
-        artifacts, requirements, tasks = load_change(
-            openspec_root, selected, config.openspec.include_main_specs
-        )
     read_text = _reader(root)
     findings: list[Finding] = []
     findings.extend(link_requirements(requirements, changed, read_text))
@@ -201,10 +253,11 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
     model_id = None
     redaction_notes: list[dict] = []
     if config.review.mode == "assisted":
-        review_untrusted("\n".join(read_text(item.path) for item in changed), config.review)
+        model_files = [item for item in changed if not is_reviewed_principle(item.path)]
+        review_untrusted("\n".join(read_text(item.path) for item in model_files), config.review)
         service_id = urlparse(config.llm.base_url or "").netloc or None
         model_id = config.llm.model
-        context, truncated, redaction_notes = build_context(changed, read_text, config.llm.max_context_chars)
+        context, truncated, redaction_notes = build_context(model_files, read_text, config.llm.max_context_chars)
         main_blob = "\n".join(f"{item.title}\n{item.body}" for item in artifacts.main_requirements)
         if main_blob:
             cleaned_main, main_notes = redact(main_blob)

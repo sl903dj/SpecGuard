@@ -37,6 +37,19 @@ def materialize(tmp: Path, name: str) -> Path:
         java.write_text(java_text, encoding="utf-8")
         commit_all(dest, "add order code")
         return dest
+    java_root = dest / "src/main/java"
+    if java_root.is_dir() and any(java_root.rglob("*.java")):
+        blobs = [(path, path.read_bytes()) for path in java_root.rglob("*.java")]
+        for path, _data in blobs:
+            path.unlink()
+        init_repo(dest)
+        commit_all(dest, "base")
+        git(dest, "checkout", "-b", "review")
+        for path, data in blobs:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        commit_all(dest, "change")
+        return dest
     if (dest / "openspec").exists() or (dest / "specguard.yaml").exists():
         init_repo(dest)
         commit_all(dest, "base")

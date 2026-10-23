@@ -31,7 +31,7 @@ description: "Task list for SpecGuard Spec Kit requirements source"
 
 **Independent Test**: `src/specguard/speckit/` 可被导入，现有 `pytest` 仍通过。
 
-- [ ] T001 创建 `src/specguard/speckit/__init__.py`，不在该文件中实现发现或解析
+- [X] T001 创建 `src/specguard/speckit/__init__.py`，不在该文件中实现发现或解析
 
 ---
 
@@ -41,10 +41,10 @@ description: "Task list for SpecGuard Spec Kit requirements source"
 
 **Independent Test**: 配置接受 `requirements.source` 的 `auto`、`openspec`、`speckit`；多个功能目录在未指定名称时失败并列出目录名。
 
-- [ ] T002 在 `tests/unit/test_requirements_source.py` 中编写失败测试：`src/specguard/config/models.py` 的 `SpecGuardConfig` 接受 `requirements.source` 为 `openspec`、`speckit` 或 `auto`，默认 `auto`；`speckit.root` 默认 `specs`；`speckit.feature` 可空，非空时必须与功能目录名完全一致；其他取值使配置无效
-- [ ] T003 在 `src/specguard/config/models.py` 中增加上述字段，并保持未列出的字段仍被拒绝
-- [ ] T004 [P] 在 `tests/unit/test_speckit_discover.py` 中编写失败测试：`specs/` 下只有「编号-名称」且含 `spec.md` 的目录是候选；没有 `spec.md` 或目录名不以编号开头的目录不是候选；零个候选时没有选中项；一个候选时选中它；多个候选且未提供 `speckit.feature` 时抛出用法错误并列出全部目录名，即使 `.specify/feature.json` 指向其中一个也不得选中，错误文本可以包含该文件中的路径
-- [ ] T005 在 `src/specguard/speckit/discover.py` 中实现 T004 的发现和选择。`speckit.feature` 必须与目录名完全一致，否则失败并指出该名称
+- [X] T002 在 `tests/unit/test_requirements_source.py` 中编写失败测试：`src/specguard/config/models.py` 的 `SpecGuardConfig` 接受 `requirements.source` 为 `openspec`、`speckit` 或 `auto`，默认 `auto`；`speckit.root` 默认 `specs`；`speckit.feature` 可空，非空时必须与功能目录名完全一致；其他取值使配置无效
+- [X] T003 在 `src/specguard/config/models.py` 中增加上述字段，并保持未列出的字段仍被拒绝
+- [X] T004 [P] 在 `tests/unit/test_speckit_discover.py` 中编写失败测试：`specs/` 下只有「编号-名称」且含 `spec.md` 的目录是候选；没有 `spec.md` 或目录名不以编号开头的目录不是候选；零个候选时没有选中项；一个候选时选中它；多个候选且未提供 `speckit.feature` 时抛出用法错误并列出全部目录名，即使 `.specify/feature.json` 指向其中一个也不得选中，错误文本可以包含该文件中的路径
+- [X] T005 在 `src/specguard/speckit/discover.py` 中实现 T004 的发现和选择。`speckit.feature` 必须与目录名完全一致，否则失败并指出该名称
 
 **Checkpoint**: 来源字段和目录选择可单测。审核流程仍只走 OpenSpec。
 
@@ -58,13 +58,13 @@ description: "Task list for SpecGuard Spec Kit requirements source"
 
 ### Tests
 
-- [ ] T006 [P] [US1] 在 `tests/unit/test_speckit_parser.py` 中编写失败测试：`src/specguard/speckit/parser.py` 从 `spec.md` 识别 `FR-` 加数字的功能需求、用户故事和 Given、When、Then 验收场景；没有可核验需求时需求符合性不可用，不编造需求标识
-- [ ] T007 [P] [US1] 在 `tests/integration/test_speckit_single.py` 中编写失败测试：夹具含 `pom.xml`、一个 `specs/001-sample/spec.md` 和 `specguard.yaml`；`run_review` 选中 `001-sample`；Markdown 含「需要人工审核」「需求覆盖」「潜在风险」「证据定位」和限制说明；`git status` 除报告目录外无变化，且不执行 Spec Kit 命令
+- [X] T006 [P] [US1] 在 `tests/unit/test_speckit_parser.py` 中编写失败测试：`src/specguard/speckit/parser.py` 从 `spec.md` 识别 `FR-` 加数字的功能需求、用户故事和 Given、When、Then 验收场景；没有可核验需求时需求符合性不可用，不编造需求标识
+- [X] T007 [P] [US1] 在 `tests/integration/test_speckit_single.py` 中编写失败测试：夹具含 `pom.xml`、一个 `specs/001-sample/spec.md` 和 `specguard.yaml`；`run_review` 选中 `001-sample`；Markdown 含「需要人工审核」「需求覆盖」「潜在风险」「证据定位」和限制说明；`git status` 除报告目录外无变化，且不执行 Spec Kit 命令
 
 ### Implementation
 
-- [ ] T008 [US1] 在 `src/specguard/speckit/parser.py` 中把规格条目映射到现有需求实体。功能需求标识是 `FR-` 加数字。用户故事标题和验收场景进入报告，但标题相似不得成为直接证据
-- [ ] T009 [US1] 在 `src/specguard/cli/main.py` 增加 `--feature`，并在 `src/specguard/pipeline.py` 的构建和测试之前，对单个 Spec Kit 功能调用解析结果。`--feature` 覆盖 `speckit.feature`。报告写明功能名和缺失工件
+- [X] T008 [US1] 在 `src/specguard/speckit/parser.py` 中把规格条目映射到现有需求实体。功能需求标识是 `FR-` 加数字。用户故事标题和验收场景进入报告，但标题相似不得成为直接证据
+- [X] T009 [US1] 在 `src/specguard/cli/main.py` 增加 `--feature`，并在 `src/specguard/pipeline.py` 的构建和测试之前，对单个 Spec Kit 功能调用解析结果。`--feature` 覆盖 `speckit.feature`。报告写明功能名和缺失工件
 
 **Checkpoint**: 单个 Spec Kit 功能可以独立演示。
 
@@ -78,12 +78,12 @@ description: "Task list for SpecGuard Spec Kit requirements source"
 
 ### Tests
 
-- [ ] T010 [P] [US2] 在 `tests/unit/test_speckit_task_evidence.py` 中编写失败测试：只认 `- [ ]`、`- [x]`、`- [X]`；缺少 `tasks.md` 时记录任务工件缺失且不合成已完成任务；变更文件内容包含 `FR-001` 才是直接证据；仅文件名重叠不是直接证据；`marked_complete` 为真且没有代码或测试支撑时，`support` 为 `none` 并计入任务完整性缺口，摘要不得写成代码一定有错
+- [X] T010 [P] [US2] 在 `tests/unit/test_speckit_task_evidence.py` 中编写失败测试：只认 `- [ ]`、`- [x]`、`- [X]`；缺少 `tasks.md` 时记录任务工件缺失且不合成已完成任务；变更文件内容包含 `FR-001` 才是直接证据；仅文件名重叠不是直接证据；`marked_complete` 为真且没有代码或测试支撑时，`support` 为 `none` 并计入任务完整性缺口，摘要不得写成代码一定有错
 
 ### Implementation
 
-- [ ] T011 [US2] 在 `src/specguard/speckit/parser.py` 中解析 `tasks.md` 并映射到现有任务实体。已勾选行是 `- [x]` 或 `- [X]`
-- [ ] T012 [US2] 在 `src/specguard/pipeline.py` 中把 Spec Kit 任务交给现有 `src/specguard/review/traceability.py` 的 `link_requirements` 和 `link_tasks`，不新增证据等级
+- [X] T011 [US2] 在 `src/specguard/speckit/parser.py` 中解析 `tasks.md` 并映射到现有任务实体。已勾选行是 `- [x]` 或 `- [X]`
+- [X] T012 [US2] 在 `src/specguard/pipeline.py` 中把 Spec Kit 任务交给现有 `src/specguard/review/traceability.py` 的 `link_requirements` 和 `link_tasks`，不新增证据等级
 
 **Checkpoint**: 需求证据和任务缺口可独立验证。
 
@@ -97,12 +97,12 @@ description: "Task list for SpecGuard Spec Kit requirements source"
 
 ### Tests
 
-- [ ] T013 [P] [US3] 在 `tests/integration/test_speckit_selection.py` 中编写失败测试：多个功能且未指定时退出 `4` 并列出全部目录名，不创建报告文件；`requirements.source` 为 `auto` 且两种来源都有候选时退出 `4` 并同时提到 `openspec` 和 `speckit`；来源为 `speckit` 时再传 `--change` 退出 `4`；来源为 `openspec` 时再传 `--feature` 退出 `4`；`--feature` 名称不存在时退出 `4` 并指出该名称
-- [ ] T014 [P] [US3] 在 `tests/integration/test_openspec_regression.py` 中编写失败测试：`tests/fixtures/single_change` 不传 `--feature` 时，所选变更、证据级别和只读结果与增加 Spec Kit 支持之前一致
+- [X] T013 [P] [US3] 在 `tests/integration/test_speckit_selection.py` 中编写失败测试：多个功能且未指定时退出 `4` 并列出全部目录名，不创建报告文件；`requirements.source` 为 `auto` 且两种来源都有候选时退出 `4` 并同时提到 `openspec` 和 `speckit`；来源为 `speckit` 时再传 `--change` 退出 `4`；来源为 `openspec` 时再传 `--feature` 退出 `4`；`--feature` 名称不存在时退出 `4` 并指出该名称
+- [X] T014 [P] [US3] 在 `tests/integration/test_openspec_regression.py` 中编写失败测试：`tests/fixtures/single_change` 不传 `--feature` 时，所选变更、证据级别和只读结果与增加 Spec Kit 支持之前一致
 
 ### Implementation
 
-- [ ] T015 [US3] 在 `src/specguard/pipeline.py` 中实现来源选择。`auto` 只在恰好一种来源有候选时解析成该来源。停止发生在构建、测试和模型请求之前，并且不创建报告文件
+- [X] T015 [US3] 在 `src/specguard/pipeline.py` 中实现来源选择。`auto` 只在恰好一种来源有候选时解析成该来源。停止发生在构建、测试和模型请求之前，并且不创建报告文件
 
 **Checkpoint**: OpenSpec 回归和拒绝自动挑选可独立验证。
 
@@ -116,11 +116,11 @@ description: "Task list for SpecGuard Spec Kit requirements source"
 
 ### Tests
 
-- [ ] T016 [P] [US4] 在 `tests/integration/test_speckit_not_java.py` 中编写失败测试：夹具有唯一 Spec Kit 功能但没有 Java 构建文件；报告限制说明包含 `src/specguard/project/detect.py` 的「无法可靠识别 Java 项目布局。未猜测构建命令。」；不发明构建命令；需求符合性、代码风险和测试不得写成已经通过
+- [X] T016 [P] [US4] 在 `tests/integration/test_speckit_not_java.py` 中编写失败测试：夹具有唯一 Spec Kit 功能但没有 Java 构建文件；报告限制说明包含 `src/specguard/project/detect.py` 的「无法可靠识别 Java 项目布局。未猜测构建命令。」；不发明构建命令；需求符合性、代码风险和测试不得写成已经通过
 
 ### Implementation
 
-- [ ] T017 [US4] 在 `src/specguard/pipeline.py` 中对非 Java 布局保留 `detect_project` 的限制说明，不把需求符合性标成通过，也不运行猜测出的 Maven 或 Gradle 命令
+- [X] T017 [US4] 在 `src/specguard/pipeline.py` 中对非 Java 布局保留 `detect_project` 的限制说明，不把需求符合性标成通过，也不运行猜测出的 Maven 或 Gradle 命令
 
 **Checkpoint**: 非 Java 限制可独立验证。
 
@@ -132,8 +132,8 @@ description: "Task list for SpecGuard Spec Kit requirements source"
 
 **Independent Test**: `docs/usage.md` 含 `--feature`。三档模板仍是 `review.mode: static` 和 `review.policy: advisory`。
 
-- [ ] T018 [P] 在 `docs/usage.md` 写明单个 Spec Kit 功能可直接审核，多个功能使用 `--feature`，两种来源同时存在时必须指定 `requirements.source`
-- [ ] T019 [P] 在 `docs/config-templates.md` 的三档 YAML 中说明 `requirements.source` 默认 `auto`、`speckit.feature` 可空。不得把 `review.policy` 改成 `strict`，不得写入 `llm.base_url`
+- [X] T018 [P] 在 `docs/usage.md` 写明单个 Spec Kit 功能可直接审核，多个功能使用 `--feature`，两种来源同时存在时必须指定 `requirements.source`
+- [X] T019 [P] 在 `docs/config-templates.md` 的三档 YAML 中说明 `requirements.source` 默认 `auto`、`speckit.feature` 可空。不得把 `review.policy` 改成 `strict`，不得写入 `llm.base_url`
 
 ---
 
@@ -197,3 +197,9 @@ Task: "T014 tests/integration/test_openspec_regression.py"
 1. 一人先完成 T001 至 T005
 2. 之后可同时编写 T006、T007、T010、T013、T014、T016
 3. 实现仍按解析器、命令行、然后多次修改 `src/specguard/pipeline.py` 的顺序进行
+
+---
+
+## Phase 8: Convergence
+
+- [X] T020 排除被审核仓库 `.specify/memory/constitution.md` 的正文，使其不能进入辅助审查的模型请求，也不据此改写审核策略 per FR-011 (partial)
