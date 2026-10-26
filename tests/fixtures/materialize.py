@@ -41,3 +41,19 @@ def materialize(tmp: Path, name: str) -> Path:
         init_repo(dest)
         commit_all(dest, "base")
     return dest
+
+
+def materialize_speckit(
+    tmp: Path,
+    name: str = "standard",
+    *,
+    initialize_git: bool = True,
+) -> Path:
+    """Copy a Spec Kit fixture while preserving its dot-directories."""
+    source = FIXTURES / "speckit" / name
+    dest = tmp / name
+    shutil.copytree(source, dest)
+    if initialize_git:
+        init_repo(dest)
+        commit_all(dest, "base")
+    return dest

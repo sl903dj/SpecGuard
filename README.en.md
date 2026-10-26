@@ -2,7 +2,13 @@
 
 [中文](README.md)
 
-SpecGuard is a local, read-only quality gate for one OpenSpec change. Its report answers requirement conformance, task completeness, code risk, test effectiveness, and review efficiency, and each conclusion carries evidence. An engineer decides whether to accept the change. The default policy does not block a merge.
+SpecGuard is a local, read-only quality gate for one OpenSpec change or Spec Kit feature. Its report answers requirement conformance, task completeness, code risk, test effectiveness, and review efficiency, and each conclusion carries evidence. An engineer decides whether to accept the change. The default policy does not block a merge.
+
+## Artifact providers
+
+Set `artifacts.provider` to `openspec`, `speckit`, or `auto`. Use `--subject <feature-directory>` to select a Spec Kit feature. Selection precedence is CLI, configuration, then `.specify/feature.json`; if none of these is present, SpecGuard exits with code `4` before checks or report writes.
+
+Version 0.2 retains the legacy OpenSpec configuration and `--change` alias. New integrations should use `artifacts.subject` / `--subject` and report schema 1.1 `subject_id`; `metadata.change` and `artifacts.selected_change` are compatibility aliases.
 
 ## Install
 

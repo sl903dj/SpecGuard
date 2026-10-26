@@ -13,7 +13,7 @@ specguard version
 specguard --help
 ```
 
-成功时退出码为 `0`。`specguard version` 的标准输出只有 `0.1.0`。这两条命令不读仓库，也不写报告。
+成功时退出码为 `0`。`specguard version` 的标准输出只有 `0.2.0`。这两条命令不读仓库，也不写报告。
 
 命令找不到时，先回到 [安装说明](install.md)，不要继续审核。下一步进入被审核仓库。
 
@@ -21,13 +21,13 @@ specguard --help
 
 `cd` 到含有 `.git` 的 Java 仓库根目录。不要把 SpecGuard 源码克隆进这个仓库。
 
-当前目录就是该仓库根时，可以继续。不在版本库中时，审核退出 `4`，提示「当前目录不在版本库中。请在 Git 仓库内运行审核。」并且不执行构建。下一步确认 OpenSpec 变更。
+当前目录就是该仓库根时，可以继续。不在版本库中时，审核退出 `4`，提示「当前目录不在版本库中。请在 Git 仓库内运行审核。」并且不执行构建。下一步确认需求工件。
 
-## 3. 确认 OpenSpec 变更
+## 3. 确认需求工件
 
-进行中的变更位于 `openspec/changes/<变更名>/`。其中应有 `proposal.md`、`design.md`、`tasks.md`。需求在该目录下的 `specs/**/spec.md`。
+OpenSpec 进行中的变更位于 `openspec/changes/<变更名>/`。Spec Kit 功能位于 `specs/<功能目录>/`，至少需要 `spec.md`，通常还包含 `plan.md` 和 `tasks.md`。
 
-只有一个变更时，后面的审核可以不传 `--change`。多个变更且未选择时退出 `4`，列出变更名，不自动挑选。找不到 OpenSpec 时审核仍可继续，但报告写明基于需求的审核不可用，不得宣称需求符合性已通过。下一步编写配置。
+Spec Kit 的选择优先级是 `--subject`、`artifacts.subject`、`.specify/feature.json`。三者都没有时退出 `4`，即使仓库里只有一个功能目录也不会自动选中，并且不运行检查、模型或报告写入。OpenSpec 的 `--change` 仍可用，但只作为 OpenSpec 兼容别名；不要与不同值的 `--subject` 混用。
 
 ## 4. 编写最小配置
 
@@ -35,6 +35,10 @@ specguard --help
 
 ```yaml
 version: 1
+artifacts:
+  provider: speckit
+  root: specs
+  subject: 003-example
 git:
   base: main
 ```
@@ -71,7 +75,7 @@ specguard config validate --config specguard.yaml
 specguard review --config specguard.yaml --mode static --policy advisory
 ```
 
-多个变更时加上 `--change <变更名>`。基线与配置不同时加上 `--base <版本>`。
+Spec Kit 可加 `--subject <功能目录>`；OpenSpec 旧调用可继续使用 `--change <变更名>`。基线与配置不同时加上 `--base <版本>`。
 
 成功时，标准输出是报告文件路径。默认文件是 `.specguard/reports/<变更名>-<目标提交前 12 位>.md` 和同名 `.json`。建议模式下，报告里可以有 `FAIL`，进程仍退出 `0`。这次审核对仓库的写入只有报告目录。用法或配置问题退出 `4`。必需检查未完成时退出 `3`，这不是干净通过。下一步阅读报告。
 
@@ -94,3 +98,7 @@ SpecGuard 不接受、不拒绝、也不合并变更。是否接受由工程师�
 把第 7 步的 `--policy advisory` 换成 `--policy strict` 时，只有已确认的确定性失败才会退出 `2`。模型假设不单独造成阻断。
 
 辅助审查必须先在配置里启用 `llm` 并填写内网 `llm.base_url`，再使用 `--mode assisted`。未配置模型时保持静态模式。
+
+## v0.2 迁移
+
+旧的 `openspec` 配置无需修改。新配置推荐使用中立的 `artifacts`；同时提供两套配置时，provider、root 和 subject 必须一致。JSON 报告升级为 schema `1.1`，新增 `artifact_provider`、`subject_id`、`selection_source` 和上下文清单；旧的 `metadata.change` 与 `artifacts.selected_change` 仍保留。

@@ -2,6 +2,20 @@
 
 选择下面一档，把 `git.base` 换成该仓库能解析的分支、标签或提交，再复制为仓库根的 `specguard.yaml`。命令不自动加载本文档。三档都是静态模式和建议策略。
 
+## 工件选择
+
+Spec Kit 配置：
+
+```text
+artifacts:
+  provider: speckit
+  root: specs
+  subject: 003-example
+  include_context: true
+```
+
+OpenSpec 新配置把 `provider` 改为 `openspec`、`root` 改为 `openspec`。`provider: auto` 仅适合仓库中能唯一识别一种提供方时；两种工件并存会报歧义。旧的 `openspec:` 配置继续兼容，但与 `artifacts:` 同时出现时必须完全一致。
+
 ## 最小
 
 不启用检查。只审核 OpenSpec 与 Git 差异能得到的证据。这一档只适合不跑构建的审核。

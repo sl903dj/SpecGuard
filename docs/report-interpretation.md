@@ -2,6 +2,12 @@
 
 SpecGuard 是变更质量门。报告帮助工程师决定先看哪里，不代替接受或拒绝变更。
 
+## 报告 schema 1.1
+
+`metadata.artifact_provider`、`subject_id` 和 `selection_source` 标明工件来源、审核对象和选择来源。`artifacts.context_documents` 只列上下文种类与路径，不输出内容。Markdown 的工件来源、需求数量和任务缺口应与 JSON 一致。
+
+`metadata.change`、`artifacts.selected_change`、`main_specs` 和 `main_requirements` 是兼容字段。新消费者应使用中立字段。Spec Kit 需求的 `change_semantics` 为 `null`，不是缺失数据。
+
 ## 检查状态
 
 每项检查只有一个状态：

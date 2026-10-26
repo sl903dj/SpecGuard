@@ -80,10 +80,20 @@ class Scenario(_Model):
     source_line: int
 
 
+class UserStory(_Model):
+    identifier: str
+    title: str
+    priority: str | None = None
+    scenarios: list[Scenario] = Field(default_factory=list)
+    source_line: int
+
+
 class Requirement(_Model):
     identifier: str
     title: str
-    change_semantics: Semantics
+    change_semantics: Semantics | None
+    user_story_id: str | None = None
+    priority: str | None = None
     scenarios: list[Scenario] = Field(default_factory=list)
     source_file: str
     source_line: int
@@ -97,6 +107,8 @@ class TaskItem(_Model):
     identifier: str
     text: str
     marked_complete: bool = False
+    parallel: bool = False
+    user_story_id: str | None = None
     source_file: str
     source_line: int
     support: Support = "none"
@@ -160,6 +172,9 @@ class Metadata(_Model):
     target: str
     head_sha: str
     change: str | None
+    artifact_provider: Literal["openspec", "speckit"] | None = None
+    subject_id: str | None = None
+    selection_source: Literal["cli", "config", "feature_state", "legacy_config"] | None = None
     started_at: str
     finished_at: str
     limitations: list[str] = Field(default_factory=list)
@@ -190,17 +205,36 @@ class MainRequirement(_Model):
     source_line: int
 
 
+class ArtifactContextEntry(_Model):
+    kind: Literal[
+        "plan",
+        "research",
+        "data_model",
+        "contract",
+        "quickstart",
+        "checklist",
+        "proposal",
+        "design",
+        "main_spec",
+    ]
+    path: str
+
+
 class ArtifactReport(_Model):
     available: bool = False
+    provider: Literal["openspec", "speckit"] | None = None
+    subject_id: str | None = None
+    selection_source: Literal["cli", "config", "feature_state", "legacy_config"] | None = None
     found: list[str] = Field(default_factory=list)
     missing: list[str] = Field(default_factory=list)
+    context_documents: list[ArtifactContextEntry] = Field(default_factory=list)
     selected_change: str | None = None
     main_specs: list[str] = Field(default_factory=list)
     main_requirements: list[MainRequirement] = Field(default_factory=list)
 
 
 class ReviewReport(_Model):
-    schema_version: Literal["1.0"] = "1.0"
+    schema_version: Literal["1.1"] = "1.1"
     review_status: ReviewStatus
     policy: PolicyView
     metadata: Metadata

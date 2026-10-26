@@ -1,3 +1,4 @@
+import ipaddress
 import os
 from urllib.parse import urlparse
 
@@ -7,10 +8,26 @@ from specguard.config.models import LlmConfig
 from specguard.errors import ProviderError
 
 
+def is_internal_endpoint(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return False
+    host = parsed.hostname
+    if host.lower() == "localhost":
+        return True
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return bool(address.is_private or address.is_loopback or address.is_link_local)
+
+
 class LlmClient:
     def __init__(self, config: LlmConfig, transport: httpx.BaseTransport | None = None):
         if not config.base_url:
             raise ProviderError("未配置内部模型地址")
+        if not is_internal_endpoint(config.base_url):
+            raise ProviderError("模型地址必须是内网或回环地址")
         self.config = config
         self._allowed_host = urlparse(config.base_url).netloc
         self._transport = transport

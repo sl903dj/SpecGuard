@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from specguard.artifacts.models import ArtifactProviderConfig
 from specguard.config.allowlist import command_allowed
 
 
@@ -141,11 +142,19 @@ class ReportConfig(_Strict):
     output_dir: str = ".specguard/reports"
     include_source_snippets: bool = False
 
+    @field_validator("formats")
+    @classmethod
+    def both_formats(cls, value: list[str]) -> list[str]:
+        if set(value) != {"markdown", "json"}:
+            raise ValueError("report.formats 必须同时包含 markdown 和 json")
+        return value
+
 
 class SpecGuardConfig(_Strict):
     version: Literal[1]
     project: ProjectConfig = Field(default_factory=ProjectConfig)
     openspec: OpenSpecConfig = Field(default_factory=OpenSpecConfig)
+    artifacts: ArtifactProviderConfig | None = None
     git: GitConfig
     review: ReviewConfig = Field(default_factory=ReviewConfig)
     checks: ChecksConfig = Field(default_factory=ChecksConfig)
@@ -153,10 +162,48 @@ class SpecGuardConfig(_Strict):
     security: SecurityConfig = Field(default_factory=SecurityConfig)
     report: ReportConfig = Field(default_factory=ReportConfig)
 
+    @model_validator(mode="before")
+    @classmethod
+    def compatible_artifact_configuration(cls, value):
+        if not isinstance(value, dict) or "artifacts" not in value or "openspec" not in value:
+            return value
+        artifacts = value.get("artifacts")
+        legacy = value.get("openspec")
+        if not isinstance(artifacts, dict) or not isinstance(legacy, dict):
+            return value
+        provider = artifacts.get("provider", "openspec")
+        artifact_root = artifacts.get("root", "openspec" if provider != "speckit" else "specs")
+        legacy_root = legacy.get("root", "openspec")
+        if provider != "openspec":
+            raise ValueError("artifacts.provider 与旧 openspec 配置冲突")
+        if artifact_root != legacy_root:
+            raise ValueError("artifacts.root 与 openspec.root 冲突")
+        if artifacts.get("subject") != legacy.get("change"):
+            raise ValueError("artifacts.subject 与 openspec.change 冲突")
+        return value
+
     @model_validator(mode="after")
     def assisted_needs_provider(self) -> "SpecGuardConfig":
         if self.review.mode == "assisted" and (not self.llm.enabled or not self.llm.base_url):
             raise ValueError("assisted 模式必须启用 llm 并提供 llm.base_url")
         if self.llm.enabled and not self.llm.base_url:
             raise ValueError("llm.base_url 不能为空")
+        from specguard.llm.client import is_internal_endpoint
+
+        if (
+            not self.security.external_network
+            and self.llm.base_url
+            and not is_internal_endpoint(self.llm.base_url)
+        ):
+            raise ValueError("external_network 为 false 时 llm.base_url 必须是内网或回环地址")
         return self
+
+    def artifact_provider_config(self) -> ArtifactProviderConfig:
+        if self.artifacts is not None:
+            return self.artifacts
+        return ArtifactProviderConfig(
+            provider="openspec",
+            root=self.openspec.root,
+            subject=self.openspec.change,
+            include_context=True,
+        )

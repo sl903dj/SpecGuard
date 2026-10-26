@@ -4,6 +4,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from specguard import __version__
+from specguard.artifacts.provider import load_bundle
 from specguard.checks.isolate import isolated_root
 from specguard.checks.java import run_java_checks
 from specguard.checks.optional_tools import run_optional_checks
@@ -14,6 +15,7 @@ from specguard.git.repository import discover_root, read_head, resolve_revision,
 from specguard.llm.client import LlmClient
 from specguard.models.entities import (
     DISCLAIMER,
+    ArtifactContextEntry,
     ArtifactReport,
     CheckResult,
     Finding,
@@ -24,8 +26,6 @@ from specguard.models.entities import (
     Summary,
 )
 from specguard.models.status import CheckStatus, ReviewStatus
-from specguard.openspec.discover import find_openspec_root, select_change
-from specguard.openspec.parser import load_change
 from specguard.report.json_report import render_json
 from specguard.report.markdown import render_markdown
 from specguard.report.paths import resolve_report_dir
@@ -34,6 +34,7 @@ from specguard.review.assisted import (
     build_context,
     error_dimensions,
     merge_llm_output,
+    review_messages,
     review_untrusted,
     skipped_dimensions,
 )
@@ -96,7 +97,7 @@ def _counts(requirements, tasks) -> tuple[int, int, int, int]:
 
 def _planned_paths(report: ReviewReport, directory: Path, formats: list[str]) -> list[str]:
     directory.mkdir(parents=True, exist_ok=True)
-    change = report.metadata.change or "no-change"
+    change = report.metadata.subject_id or report.metadata.change or "no-subject"
     sha = (report.metadata.head_sha or "unknown")[:12]
     stem = f"{change}-{sha}"
     planned: list[str] = []
@@ -127,9 +128,24 @@ def _unique(path: Path) -> Path:
         index += 1
 
 
-def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = None) -> tuple[ReviewReport, int]:
+def run_review(
+    config: SpecGuardConfig,
+    config_path: Path,
+    repo: Path | None = None,
+    *,
+    cli_subject: str | None = None,
+) -> tuple[ReviewReport, int]:
     started = _now()
     root = discover_root(repo or (config_path.parent / config.project.root))
+    provider_config = config.artifact_provider_config()
+    include_main = config.openspec.include_main_specs
+    bundle = load_bundle(
+        root,
+        provider_config,
+        cli_subject,
+        include_main_specs=include_main,
+        require_selection=config.openspec.require_change_selection,
+    )
     base = resolve_revision(root, config.git.base)
     target = resolve_revision(root, config.git.target)
     if config.git.fail_on_uncommitted_changes and not config.git.include_worktree and worktree_dirty(root):
@@ -137,17 +153,41 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
     start_head = read_head(root)
     report_dir = resolve_report_dir(root, config.report.output_dir)
     changed = collect_changes(root, base, target, config.git.include_worktree)
-    openspec_root = find_openspec_root(root, config.openspec.root)
-    selected = select_change(openspec_root, config.openspec.change, config.openspec.require_change_selection)
     limitations: list[str] = []
-    if openspec_root is None or selected is None:
-        artifacts = ArtifactReport(available=False, selected_change=selected)
+    if bundle is None:
+        selected = None
+        artifact_provider = (
+            provider_config.provider if provider_config.provider != "auto" else None
+        )
+        selection_source = None
+        artifacts = ArtifactReport(
+            available=False,
+            provider=artifact_provider,
+            selected_change=None,
+        )
         requirements, tasks = [], []
         limitations.append("基于需求的审核不可用")
     else:
-        artifacts, requirements, tasks = load_change(
-            openspec_root, selected, config.openspec.include_main_specs
+        selected = bundle.subject.subject_id
+        artifact_provider = bundle.subject.provider
+        selection_source = bundle.subject.selection_source
+        artifacts = ArtifactReport(
+            available=True,
+            provider=artifact_provider,
+            subject_id=selected,
+            selection_source=selection_source,
+            found=bundle.found,
+            missing=bundle.missing,
+            context_documents=[
+                ArtifactContextEntry(kind=item.kind, path=item.path)
+                for item in bundle.context_documents
+            ],
+            selected_change=selected,
+            main_specs=bundle.main_specs,
+            main_requirements=bundle.main_requirements,
         )
+        requirements, tasks = bundle.requirements, bundle.tasks
+        limitations.extend(bundle.limitations)
     read_text = _reader(root)
     findings: list[Finding] = []
     findings.extend(link_requirements(requirements, changed, read_text))
@@ -156,7 +196,28 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
     if layout.limitation:
         limitations.append(layout.limitation)
     workdir = root
-    if config.security.isolate_builds:
+    if not config.security.isolate_builds:
+        checks = [
+            CheckResult(
+                check_id=name,
+                required=getattr(config.checks, name).required,
+                status=CheckStatus.ERROR if getattr(config.checks, name).required else CheckStatus.SKIPPED,
+                command=getattr(config.checks, name).command,
+                diagnostic="隔离已关闭，拒绝在被审核仓库执行项目命令",
+            )
+            for name in (
+                "build",
+                "tests",
+                "checkstyle",
+                "spotbugs",
+                "pmd",
+                "jacoco",
+                "archunit",
+                "openspec_validate",
+            )
+            if getattr(config.checks, name).enabled
+        ]
+    elif config.security.isolate_builds:
         workdir, isolate_error = isolated_root(root, True)
         if isolate_error or workdir is None:
             limitations.append(f"构建隔离失败: {isolate_error}")
@@ -173,9 +234,6 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
         else:
             checks = run_java_checks(config.checks, workdir, config.security.max_command_output_bytes)
             checks.extend(run_optional_checks(config.checks, workdir, config.security.max_command_output_bytes))
-    else:
-        checks = run_java_checks(config.checks, root, config.security.max_command_output_bytes)
-        checks.extend(run_optional_checks(config.checks, root, config.security.max_command_output_bytes))
     findings.extend(findings_from_checks(checks))
     test_check = next((item for item in checks if item.check_id == "tests"), None)
     if test_check is not None:
@@ -201,10 +259,18 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
     model_id = None
     redaction_notes: list[dict] = []
     if config.review.mode == "assisted":
-        review_untrusted("\n".join(read_text(item.path) for item in changed), config.review)
+        untrusted_source = "\n".join(read_text(item.path) for item in changed)
+        kept_policy = review_untrusted(untrusted_source, config.review)
+        if kept_policy.policy != config.review.policy or kept_policy.llm_findings_block:
+            raise UsageError("不可信内容试图改写审核策略")
         service_id = urlparse(config.llm.base_url or "").netloc or None
         model_id = config.llm.model
-        context, truncated, redaction_notes = build_context(changed, read_text, config.llm.max_context_chars)
+        context, truncated, redaction_notes = build_context(
+            changed,
+            read_text,
+            config.llm.max_context_chars,
+            context_documents=bundle.context_documents if bundle is not None else [],
+        )
         main_blob = "\n".join(f"{item.title}\n{item.body}" for item in artifacts.main_requirements)
         if main_blob:
             cleaned_main, main_notes = redact(main_blob)
@@ -217,7 +283,7 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
             limitations.append("辅助审查上下文已按上限截断")
         try:
             client = LlmClient(config.llm)
-            payload = client.post_review({"messages": [{"role": "user", "content": context}]})
+            payload = client.post_review({"messages": review_messages(context)})
             findings.extend(merge_llm_output(payload, {item.path for item in changed}))
             checks.extend(
                 [
@@ -269,6 +335,9 @@ def run_review(config: SpecGuardConfig, config_path: Path, repo: Path | None = N
             target=target,
             head_sha=start_head,
             change=selected,
+            artifact_provider=artifact_provider,
+            subject_id=selected,
+            selection_source=selection_source,
             started_at=started,
             finished_at=_now(),
             limitations=limitations,

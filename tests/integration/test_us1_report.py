@@ -21,7 +21,7 @@ def test_review_writes_both_reports_and_leaves_sources_untouched(tmp_path: Path)
     assert "需求覆盖" in text
     assert "潜在风险" in text
     assert "证据定位" in text
-    assert payload["schema_version"] == "1.0"
+    assert payload["schema_version"] == "1.1"
     assert payload["metadata"]["base"]
     assert payload["metadata"]["target"]
     assert source.read_bytes() == before

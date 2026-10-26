@@ -1,5 +1,7 @@
 from specguard.models.entities import (
     DISCLAIMER,
+    ArtifactContextEntry,
+    ArtifactReport,
     CheckResult,
     Finding,
     Location,
@@ -49,10 +51,41 @@ def _report(status: ReviewStatus = ReviewStatus.REVIEW_COMPLETE) -> ReviewReport
 
 def test_json_keeps_required_keys_and_version() -> None:
     payload = render_json(_report())
-    assert payload["schema_version"] == "1.0"
+    assert payload["schema_version"] == "1.1"
     assert REQUIRED <= set(payload)
     assert payload["summary"]["coverage_percent"] is None
     assert payload["summary"]["disclaimer"] == DISCLAIMER
+
+
+def test_json_exposes_neutral_artifact_metadata_and_compatibility_aliases() -> None:
+    report = _report()
+    report.metadata.artifact_provider = "speckit"
+    report.metadata.subject_id = "003-demo"
+    report.metadata.selection_source = "feature_state"
+    report.metadata.change = "003-demo"
+    report.artifacts = ArtifactReport(
+        available=True,
+        provider="speckit",
+        subject_id="003-demo",
+        selection_source="feature_state",
+        found=["spec.md", "plan.md", "tasks.md"],
+        context_documents=[
+            ArtifactContextEntry(kind="plan", path="specs/003-demo/plan.md")
+        ],
+        selected_change="003-demo",
+    )
+    payload = render_json(report)
+    assert payload["metadata"]["artifact_provider"] == "speckit"
+    assert payload["metadata"]["subject_id"] == "003-demo"
+    assert payload["metadata"]["selection_source"] == "feature_state"
+    assert payload["metadata"]["change"] == "003-demo"
+    assert payload["artifacts"]["provider"] == "speckit"
+    assert payload["artifacts"]["subject_id"] == "003-demo"
+    assert payload["artifacts"]["selection_source"] == "feature_state"
+    assert payload["artifacts"]["context_documents"] == [
+        {"kind": "plan", "path": "specs/003-demo/plan.md"}
+    ]
+    assert payload["artifacts"]["selected_change"] == "003-demo"
 
 
 def test_empty_report_does_not_claim_the_code_is_clean() -> None:

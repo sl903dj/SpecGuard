@@ -41,10 +41,26 @@ def _apply_overrides(
     policy: str | None,
     formats: str | None,
     output: str | None,
+    subject: str | None = None,
 ) -> SpecGuardConfig:
     data = loaded.model_dump()
+    if loaded.artifacts is not None and "openspec" not in loaded.model_fields_set:
+        data.pop("openspec", None)
     if change is not None:
-        data["openspec"]["change"] = change
+        provider = loaded.artifact_provider_config().provider
+        if provider not in {"openspec", "auto"}:
+            raise ConfigError("--change 仅适用于 OpenSpec 提供方")
+        if subject is not None and subject != change:
+            raise ConfigError("--change 与 --subject 选择冲突")
+        if data["artifacts"] is not None:
+            data["artifacts"]["provider"] = "openspec"
+            data["artifacts"]["subject"] = change
+            if "openspec" in loaded.model_fields_set:
+                data["openspec"]["change"] = change
+        elif data.get("openspec") is None:
+            data["openspec"] = {"change": change}
+        else:
+            data["openspec"]["change"] = change
     if base is not None:
         data["git"]["base"] = base
     if target is not None:
@@ -69,6 +85,7 @@ def _apply_overrides(
 def review(
     config: Path = typer.Option(..., "--config", exists=True, dir_okay=False),
     change: str | None = typer.Option(None, "--change"),
+    subject: str | None = typer.Option(None, "--subject"),
     base: str | None = typer.Option(None, "--base"),
     target: str | None = typer.Option(None, "--target"),
     include_worktree: bool = typer.Option(False, "--include-worktree"),
@@ -89,8 +106,9 @@ def review(
             policy,
             formats,
             output,
+            subject,
         )
-        report, code = run_review(loaded, config)
+        report, code = run_review(loaded, config, cli_subject=subject or change)
     except (ConfigError, UsageError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(USAGE) from exc

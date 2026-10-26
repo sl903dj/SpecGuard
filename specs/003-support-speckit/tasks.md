@@ -23,8 +23,8 @@ description: "Implementation tasks for Spec Kit artifact support"
 
 **Purpose**: 建立工件提供方包和 Spec Kit 测试夹具目录，不改变现有运行行为。
 
-- [ ] T001 Create the artifact provider package exports in `src/specguard/artifacts/__init__.py`
-- [ ] T002 [P] Extend fixture materialization helpers for `.specify/` and `specs/<feature>/` trees in `tests/fixtures/materialize.py`
+- [X] T001 Create the artifact provider package exports in `src/specguard/artifacts/__init__.py`
+- [X] T002 [P] Extend fixture materialization helpers for `.specify/` and `specs/<feature>/` trees in `tests/fixtures/materialize.py`
 
 ---
 
@@ -36,15 +36,15 @@ description: "Implementation tasks for Spec Kit artifact support"
 
 ### Tests
 
-- [ ] T003 [P] Add failing model tests covering `ArtifactProviderConfig`, `ArtifactSubject`, `ArtifactBundle`, and `ContextDocument` constraints from `data-model.md` in `tests/unit/test_artifact_models.py`
-- [ ] T004 [P] Add failing provider contract tests for read-only `discover/select/validate/load` behavior in `tests/unit/test_artifact_provider.py`
-- [ ] T005 [P] Add failing configuration tests for `artifacts.provider` values `openspec|speckit|auto`, repository-relative `root`, optional `subject`, and default `include_context: true` in `tests/unit/test_config.py`
+- [X] T003 [P] Add failing model tests covering `ArtifactProviderConfig`, `ArtifactSubject`, `ArtifactBundle`, and `ContextDocument` constraints from `data-model.md` in `tests/unit/test_artifact_models.py`
+- [X] T004 [P] Add failing provider contract tests for read-only `discover/select/validate/load` behavior in `tests/unit/test_artifact_provider.py`
+- [X] T005 [P] Add failing configuration tests for `artifacts.provider` values `openspec|speckit|auto`, repository-relative `root`, optional `subject`, and default `include_context: true` in `tests/unit/test_config.py`
 
 ### Implementation
 
-- [ ] T006 Implement `ArtifactProviderConfig`, `ArtifactSubject`, `ArtifactBundle`, and `ContextDocument` with repository-bound path and selection-source validation in `src/specguard/artifacts/models.py`
-- [ ] T007 Implement the read-only `ArtifactProvider` protocol and provider registry without format-specific directory rules in `src/specguard/artifacts/provider.py`
-- [ ] T008 Add optional `artifacts` configuration while retaining the existing required semantics of version 1 configurations in `src/specguard/config/models.py`
+- [X] T006 Implement `ArtifactProviderConfig`, `ArtifactSubject`, `ArtifactBundle`, and `ContextDocument` with repository-bound path and selection-source validation in `src/specguard/artifacts/models.py`
+- [X] T007 Implement the read-only `ArtifactProvider` protocol and provider registry without format-specific directory rules in `src/specguard/artifacts/provider.py`
+- [X] T008 Add optional `artifacts` configuration while retaining the existing required semantics of version 1 configurations in `src/specguard/config/models.py`
 
 **Checkpoint**: 中立模型与 provider 边界可单独测试，现有 OpenSpec 流水线尚未切换。
 
@@ -58,19 +58,19 @@ description: "Implementation tasks for Spec Kit artifact support"
 
 ### Tests（先写并确认失败）
 
-- [ ] T009 [P] [US1] Create a standard Spec Kit fixture with `FR-*`, acceptance scenarios, `[X] T* [P] [USn]`, and optional context documents in `tests/fixtures/speckit/standard/`
-- [ ] T010 [P] [US1] Add failing parser tests for requirement ID/body/source line/user story/priority/scenarios, task completion/parallel/story metadata, CRLF, Chinese text, duplicate IDs, and template placeholders in `tests/unit/test_speckit_parser.py`
-- [ ] T011 [P] [US1] Add failing provider load tests proving `spec.md|plan.md|tasks.md` completeness and optional context classification without treating context as evidence in `tests/unit/test_artifact_provider.py`
-- [ ] T012 [P] [US1] Add a failing end-to-end test for explicit Spec Kit configuration, traceability, task gaps, and unchanged artifact files in `tests/integration/test_speckit_review.py`
+- [X] T009 [P] [US1] Create a standard Spec Kit fixture with `FR-*`, acceptance scenarios, `[X] T* [P] [USn]`, and optional context documents in `tests/fixtures/speckit/standard/`
+- [X] T010 [P] [US1] Add failing parser tests for requirement ID/body/source line/user story/priority/scenarios, task completion/parallel/story metadata, CRLF, Chinese text, duplicate IDs, and template placeholders in `tests/unit/test_speckit_parser.py`
+- [X] T011 [P] [US1] Add failing provider load tests proving `spec.md|plan.md|tasks.md` completeness and optional context classification without treating context as evidence in `tests/unit/test_artifact_provider.py`
+- [X] T012 [P] [US1] Add a failing end-to-end test for explicit Spec Kit configuration, traceability, task gaps, and unchanged artifact files in `tests/integration/test_speckit_review.py`
 
 ### Implementation
 
-- [ ] T013 [P] [US1] Extend `Requirement.change_semantics` to `added|modified|removed|null` and add optional `user_story_id` and `priority`; add `parallel` and optional `user_story_id` to `TaskItem` in `src/specguard/models/entities.py`
-- [ ] T014 [US1] Implement Spec Kit `FR-*` requirement and numbered Given/When/Then scenario parsing with duplicate/template validation in `src/specguard/artifacts/speckit.py`
-- [ ] T015 [US1] Implement Spec Kit `T*` task parsing, completion markers, `[P]`, `[USn]`, source lines, and duplicate validation in `src/specguard/artifacts/speckit.py`
-- [ ] T016 [US1] Load `plan.md`, `research.md`, `data-model.md`, `contracts/**`, `quickstart.md`, and `checklists/**` as bounded `ContextDocument` entries in `src/specguard/artifacts/speckit.py`
-- [ ] T017 [US1] Implement explicit `speckit` provider selection and loading into an `ArtifactBundle` in `src/specguard/artifacts/provider.py`
-- [ ] T018 [US1] Refactor review orchestration to consume `ArtifactBundle` while preserving existing traceability, task integrity, test adequacy, risk, and policy stages in `src/specguard/pipeline.py`
+- [X] T013 [P] [US1] Extend `Requirement.change_semantics` to `added|modified|removed|null` and add optional `user_story_id` and `priority`; add `parallel` and optional `user_story_id` to `TaskItem` in `src/specguard/models/entities.py`
+- [X] T014 [US1] Implement Spec Kit `FR-*` requirement and numbered Given/When/Then scenario parsing with duplicate/template validation in `src/specguard/artifacts/speckit.py`
+- [X] T015 [US1] Implement Spec Kit `T*` task parsing, completion markers, `[P]`, `[USn]`, source lines, and duplicate validation in `src/specguard/artifacts/speckit.py`
+- [X] T016 [US1] Load `plan.md`, `research.md`, `data-model.md`, `contracts/**`, `quickstart.md`, and `checklists/**` as bounded `ContextDocument` entries in `src/specguard/artifacts/speckit.py`
+- [X] T017 [US1] Implement explicit `speckit` provider selection and loading into an `ArtifactBundle` in `src/specguard/artifacts/provider.py`
+- [X] T018 [US1] Refactor review orchestration to consume `ArtifactBundle` while preserving existing traceability, task integrity, test adequacy, risk, and policy stages in `src/specguard/pipeline.py`
 
 **Checkpoint**: 显式配置的单个 Spec Kit 功能可独立审核；这是建议的 MVP 边界。
 
@@ -84,16 +84,16 @@ description: "Implementation tasks for Spec Kit artifact support"
 
 ### Tests（先写并确认失败）
 
-- [ ] T019 [P] [US2] Create multiple-feature, malformed-state, missing-spec, and symlink/path-escape fixtures in `tests/fixtures/speckit/selection/`
-- [ ] T020 [P] [US2] Add failing selection tests for CLI > config > feature state precedence, no Git-branch inference, ambiguity, malformed JSON, non-string state, missing directories, and repository escape in `tests/unit/test_speckit_discovery.py`
-- [ ] T021 [P] [US2] Add failing CLI tests for `--subject`, configuration override, and `help/version` avoiding artifact discovery in `tests/unit/test_cli.py`
-- [ ] T022 [P] [US2] Add failing integration tests proving invalid selection exits `4` before checks/network/report writes and leaves `.specify/feature.json` unchanged in `tests/integration/test_speckit_selection.py`
+- [X] T019 [P] [US2] Create multiple-feature, malformed-state, missing-spec, and symlink/path-escape fixtures in `tests/fixtures/speckit/selection/`
+- [X] T020 [P] [US2] Add failing selection tests for CLI > config > feature state precedence, no Git-branch inference, ambiguity, malformed JSON, non-string state, missing directories, and repository escape in `tests/unit/test_speckit_discovery.py`
+- [X] T021 [P] [US2] Add failing CLI tests for `--subject`, configuration override, and `help/version` avoiding artifact discovery in `tests/unit/test_cli.py`
+- [X] T022 [P] [US2] Add failing integration tests proving invalid selection exits `4` before checks/network/report writes and leaves `.specify/feature.json` unchanged in `tests/integration/test_speckit_selection.py`
 
 ### Implementation
 
-- [ ] T023 [US2] Implement read-only `.specify/feature.json` parsing, explicit-selection precedence, ambiguity handling, repository containment, symlink escape rejection, and required `spec.md` validation in `src/specguard/artifacts/speckit.py`
-- [ ] T024 [US2] Add `--subject` handling and pass the neutral selection to configuration/pipeline without running discovery for `help` or `version` in `src/specguard/cli/main.py`
-- [ ] T025 [US2] Move provider selection and validation ahead of deterministic checks and assisted-review setup, mapping selection failures to usage exit code `4`, in `src/specguard/pipeline.py`
+- [X] T023 [US2] Implement read-only `.specify/feature.json` parsing, explicit-selection precedence, ambiguity handling, repository containment, symlink escape rejection, and required `spec.md` validation in `src/specguard/artifacts/speckit.py`
+- [X] T024 [US2] Add `--subject` handling and pass the neutral selection to configuration/pipeline without running discovery for `help` or `version` in `src/specguard/cli/main.py`
+- [X] T025 [US2] Move provider selection and validation ahead of deterministic checks and assisted-review setup, mapping selection failures to usage exit code `4`, in `src/specguard/pipeline.py`
 
 **Checkpoint**: 多功能 Spec Kit 仓库的审核对象选择可审计，所有选择错误均安全地提前失败。
 
@@ -107,17 +107,17 @@ description: "Implementation tasks for Spec Kit artifact support"
 
 ### Tests（先写并确认失败）
 
-- [ ] T026 [P] [US3] Add failing OpenSpec provider contract tests covering discovery, explicit/multiple-change selection, delta semantics, tasks, main specs, and missing artifacts in `tests/unit/test_openspec_provider.py`
-- [ ] T027 [P] [US3] Add failing compatibility tests for legacy `openspec`-only configuration, matching dual configuration, conflicting root/subject, and `artifacts.provider != openspec` conflicts in `tests/unit/test_config.py`
-- [ ] T028 [P] [US3] Add failing CLI compatibility tests proving `--change` remains OpenSpec-only and conflicts with incompatible `--subject` values/providers in `tests/unit/test_cli.py`
-- [ ] T029 [P] [US3] Add an end-to-end regression test comparing normalized OpenSpec requirements/tasks/findings with the pre-provider behavior in `tests/integration/test_provider_compatibility.py`
+- [X] T026 [P] [US3] Add failing OpenSpec provider contract tests covering discovery, explicit/multiple-change selection, delta semantics, tasks, main specs, and missing artifacts in `tests/unit/test_openspec_provider.py`
+- [X] T027 [P] [US3] Add failing compatibility tests for legacy `openspec`-only configuration, matching dual configuration, conflicting root/subject, and `artifacts.provider != openspec` conflicts in `tests/unit/test_config.py`
+- [X] T028 [P] [US3] Add failing CLI compatibility tests proving `--change` remains OpenSpec-only and conflicts with incompatible `--subject` values/providers in `tests/unit/test_cli.py`
+- [X] T029 [P] [US3] Add an end-to-end regression test comparing normalized OpenSpec requirements/tasks/findings with the pre-provider behavior in `tests/integration/test_provider_compatibility.py`
 
 ### Implementation
 
-- [ ] T030 [US3] Implement the OpenSpec adapter by reusing existing discovery/parser behavior and emitting `ArtifactBundle` without changing delta semantics in `src/specguard/artifacts/openspec.py`
-- [ ] T031 [US3] Add legacy `openspec`-to-provider mapping, matching dual-config acceptance, and conflicting dual-config rejection in `src/specguard/config/models.py`
-- [ ] T032 [US3] Preserve `--change` as an OpenSpec-only compatibility alias and reject conflicting neutral selections in `src/specguard/cli/main.py`
-- [ ] T033 [US3] Remove direct OpenSpec discovery/parser imports from the core orchestration and route both providers through the registry in `src/specguard/pipeline.py`
+- [X] T030 [US3] Implement the OpenSpec adapter by reusing existing discovery/parser behavior and emitting `ArtifactBundle` without changing delta semantics in `src/specguard/artifacts/openspec.py`
+- [X] T031 [US3] Add legacy `openspec`-to-provider mapping, matching dual-config acceptance, and conflicting dual-config rejection in `src/specguard/config/models.py`
+- [X] T032 [US3] Preserve `--change` as an OpenSpec-only compatibility alias and reject conflicting neutral selections in `src/specguard/cli/main.py`
+- [X] T033 [US3] Remove direct OpenSpec discovery/parser imports from the core orchestration and route both providers through the registry in `src/specguard/pipeline.py`
 
 **Checkpoint**: OpenSpec 与 Spec Kit 均经同一中立边界运行，现有 OpenSpec 用户无需迁移配置。
 
@@ -131,15 +131,15 @@ description: "Implementation tasks for Spec Kit artifact support"
 
 ### Tests（先写并确认失败）
 
-- [ ] T034 [P] [US4] Add failing entity/JSON contract tests for schema `1.1`, `artifact_provider`, `subject_id`, `selection_source`, context inventory, nullable Spec Kit semantics, and deprecated aliases in `tests/unit/test_report_contract.py`
-- [ ] T035 [P] [US4] Add failing Markdown tests for provider, subject, selection source, provider-specific missing artifacts, and no OpenSpec-only missing labels in Spec Kit reports in `tests/unit/test_markdown_report.py`
-- [ ] T036 [P] [US4] Add failing cross-format integration assertions for matching counts and artifact metadata in `tests/integration/test_speckit_review.py`
+- [X] T034 [P] [US4] Add failing entity/JSON contract tests for schema `1.1`, `artifact_provider`, `subject_id`, `selection_source`, context inventory, nullable Spec Kit semantics, and deprecated aliases in `tests/unit/test_report_contract.py`
+- [X] T035 [P] [US4] Add failing Markdown tests for provider, subject, selection source, provider-specific missing artifacts, and no OpenSpec-only missing labels in Spec Kit reports in `tests/unit/test_markdown_report.py`
+- [X] T036 [P] [US4] Add failing cross-format integration assertions for matching counts and artifact metadata in `tests/integration/test_speckit_review.py`
 
 ### Implementation
 
-- [ ] T037 [US4] Upgrade `ReviewReport.schema_version` to `1.1` and add neutral provider/subject/selection/context fields while retaining deprecated `metadata.change` and `artifacts.selected_change` aliases in `src/specguard/models/entities.py`
-- [ ] T038 [P] [US4] Render schema 1.1 neutral artifact metadata and compatibility aliases in `src/specguard/report/json_report.py`
-- [ ] T039 [P] [US4] Render provider, subject, selection source, and provider-specific artifact completeness in `src/specguard/report/markdown.py`
+- [X] T037 [US4] Upgrade `ReviewReport.schema_version` to `1.1` and add neutral provider/subject/selection/context fields while retaining deprecated `metadata.change` and `artifacts.selected_change` aliases in `src/specguard/models/entities.py`
+- [X] T038 [P] [US4] Render schema 1.1 neutral artifact metadata and compatibility aliases in `src/specguard/report/json_report.py`
+- [X] T039 [P] [US4] Render provider, subject, selection source, and provider-specific artifact completeness in `src/specguard/report/markdown.py`
 
 **Checkpoint**: 人工读者和程序消费者都能区分工件来源，且有明确报告版本迁移路径。
 
@@ -149,13 +149,13 @@ description: "Implementation tasks for Spec Kit artifact support"
 
 **Purpose**: 完成辅助审查安全、版本发布、文档、性能与全量验证。
 
-- [ ] T040 [P] Add failing assisted-review tests proving Spec Kit context is bounded, redacted, treated as untrusted, and never upgrades evidence by itself in `tests/unit/test_assisted_speckit_context.py`
-- [ ] T041 Add bounded Spec Kit `ContextDocument` content to redaction/truncation flow without changing hypothesis policy in `src/specguard/review/assisted.py`
-- [ ] T042 [P] Update package version to `0.2.0` and add a version assertion in `src/specguard/__init__.py` and `tests/unit/test_install_entry.py`
-- [ ] T043 [P] Document provider selection, `--subject`, legacy `--change`, ambiguity errors, and v0.2 migration in `README.md`, `README.en.md`, `docs/usage.md`, `docs/config-templates.md`, and `docs/report-interpretation.md`
-- [ ] T044 [P] Add a discovery/parsing performance test for 100 feature directories, 1000 requirements, and 5000 tasks under 5 seconds in `tests/integration/test_speckit_performance.py`
-- [ ] T045 Run the four scenarios in `specs/003-support-speckit/quickstart.md`, execute the full `pytest` suite, and record any environment limitations in `specs/003-support-speckit/quickstart.md`
-- [ ] T046 Verify with a repository snapshot test that Spec Kit artifacts, `.specify/feature.json`, Git index, and commit history remain unchanged after review in `tests/integration/test_readonly_repository.py`
+- [X] T040 [P] Add failing assisted-review tests proving Spec Kit context is bounded, redacted, treated as untrusted, and never upgrades evidence by itself in `tests/unit/test_assisted_speckit_context.py`
+- [X] T041 Add bounded Spec Kit `ContextDocument` content to redaction/truncation flow without changing hypothesis policy in `src/specguard/review/assisted.py`
+- [X] T042 [P] Update package version to `0.2.0` and add a version assertion in `src/specguard/__init__.py` and `tests/unit/test_install_entry.py`
+- [X] T043 [P] Document provider selection, `--subject`, legacy `--change`, ambiguity errors, and v0.2 migration in `README.md`, `README.en.md`, `docs/usage.md`, `docs/config-templates.md`, and `docs/report-interpretation.md`
+- [X] T044 [P] Add a discovery/parsing performance test for 100 feature directories, 1000 requirements, and 5000 tasks under 5 seconds in `tests/integration/test_speckit_performance.py`
+- [X] T045 Run the four scenarios in `specs/003-support-speckit/quickstart.md`, execute the full `pytest` suite, and record any environment limitations in `specs/003-support-speckit/quickstart.md`
+- [X] T046 Verify with a repository snapshot test that Spec Kit artifacts, `.specify/feature.json`, Git index, and commit history remain unchanged after review in `tests/integration/test_readonly_repository.py`
 
 ---
 
@@ -256,3 +256,20 @@ Task T029: 编写 OpenSpec 端到端回归测试
 - 每个故事先测试后实现，并在 checkpoint 独立验证。
 - `ContextDocument` 只提供上下文，不得直接成为实现完成证据。
 - Spec Kit 支持属于 v0.2；v0.1 仍遵守宪章的 OpenSpec-only 范围。
+
+---
+
+## Phase 8: Convergence
+
+- [X] T047 CRITICAL construct assisted-review requests with an immutable system policy, explicit untrusted-content boundaries, and prompt-injection behavior tests in `src/specguard/review/assisted.py`, `src/specguard/pipeline.py`, and `tests/unit/test_assisted_speckit_context.py` per Constitution IV and FR-019 (partial)
+- [X] T048 CRITICAL require every completed review to emit both Markdown and JSON, reject single-format configuration, and add configuration/end-to-end coverage in `src/specguard/config/models.py`, `src/specguard/pipeline.py`, `tests/unit/test_config.py`, and `tests/integration/test_speckit_review.py` per Constitution V (contradicts)
+- [X] T049 CRITICAL prevent project commands from running in the audited repository when isolation is disabled, and verify artifacts, worktree, index, and history cannot be changed in `src/specguard/config/models.py`, `src/specguard/pipeline.py`, and `tests/integration/test_readonly_repository.py` per Constitution V, FR-018, and SC-006 (contradicts)
+- [X] T050 CRITICAL enforce the internal-service boundary by rejecting public or invalid `llm.base_url` values when external networking is disabled, with private-network and loopback tests in `src/specguard/config/models.py`, `src/specguard/llm/client.py`, and `tests/unit/test_llm_client.py` per Constitution V (contradicts)
+- [X] T051 preserve real Spec Kit user stories, priorities, and acceptance scenarios independently and associate requirements only with traceable evidence in `src/specguard/artifacts/speckit.py`, `src/specguard/artifacts/models.py`, `src/specguard/models/entities.py`, and `tests/unit/test_speckit_parser.py` per FR-007, SC-001, and US1/AC2 (partial)
+- [X] T052 reject invalid UTF-8, requirement-like entries without stable `FR-*` IDs, and all critical unexpanded Spec Kit template placeholders in `src/specguard/artifacts/speckit.py` and `tests/unit/test_speckit_parser.py` per FR-009 and the specification edge cases (partial)
+- [X] T053 constrain selected features to the configured artifact root and validate every core/context file's resolved path before reading it, including symlink escape tests in `src/specguard/artifacts/speckit.py` and `tests/unit/test_speckit_discovery.py` per FR-006 and US2/AC3 (partial)
+- [X] T054 render `T*` task details, source lines, support status, and context-document inventory in Markdown and assert item-level parity with JSON in `src/specguard/report/markdown.py`, `tests/unit/test_markdown_report.py`, and `tests/integration/test_speckit_review.py` per FR-016, SC-005, and US1/US4 (partial)
+
+## Phase 9: Convergence
+
+- [X] T055 Require explicit CLI/config selection or a valid `.specify/feature.json` before loading a Spec Kit subject, and stop selecting a sole discovered directory while labeling it `config` in `src/specguard/artifacts/speckit.py` and `tests/unit/test_speckit_discovery.py` per FR-005, US2, and plan decision 3 (contradicts)

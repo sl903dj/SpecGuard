@@ -6,6 +6,12 @@
 **Target Release**: SpecGuard v0.2
 **Input**: “在现有 OpenSpec 支持之外，让 SpecGuard 支持审核 GitHub Spec Kit 的规格、计划和任务工件。”
 
+## Clarifications
+
+### Session 2026-10-26
+
+- Q: 仓库里只有一个 Spec Kit 功能目录，但命令行、配置和 `.specify/feature.json` 都没有指定它时，审核应该直接失败，还是自动选中这个目录？ → A: 三者都没有时一律失败，即使只有一个功能目录。
+
 ## User Scenarios & Testing
 
 ### User Story 1 - 审核一个 Spec Kit 功能 (Priority: P1)
@@ -27,14 +33,14 @@
 
 一个仓库可能包含多个 Spec Kit 功能目录。工程师需要清楚知道本次审核使用了哪个功能，系统不能仅凭当前 Git 分支静默猜测。
 
-**Independent Test**: 准备两个功能目录，分别验证显式选择、`.specify/feature.json` 选择、状态文件无效和未选择四种情况。
+**Independent Test**: 准备一个或多个功能目录，分别验证显式选择、`.specify/feature.json` 选择、状态文件无效，以及缺少显式选择和状态文件四种情况。
 
 **Acceptance Scenarios**:
 
 1. **Given** 配置或命令行显式指定功能目录，**When** 审核开始，**Then** 显式值优先于 `.specify/feature.json`。
 2. **Given** 没有显式选择且 `.specify/feature.json` 含有效 `feature_directory`，**When** 审核开始，**Then** 系统选择该目录并在报告记录选择来源。
 3. **Given** 状态文件指向不存在、越界或不含 `spec.md` 的目录，**When** 审核开始，**Then** 系统在执行构建、测试或辅助审查前停止，并给出可操作错误。
-4. **Given** 存在多个功能目录但没有显式选择或有效状态，**When** 审核开始，**Then** 系统要求选择，不按 Git 分支名任意匹配。
+4. **Given** 没有显式选择，也没有有效的 `.specify/feature.json`，**When** 审核开始，**Then** 系统要求选择并停止；即使只发现一个功能目录，也不按 Git 分支名或目录数量自动匹配。
 
 ---
 
@@ -72,6 +78,7 @@
 - 功能目录在仓库外，或经符号链接逃出仓库；审核必须拒绝。
 - `spec.md` 仍含模板占位符、重复 `FR-*`、缺失需求 ID或重复任务 ID。
 - `tasks.md` 使用大小写不同的完成标记、没有 `[USn]`、含阶段标题或依赖说明。
+- 没有命令行、配置或有效的 `.specify/feature.json` 时，即使 `specs/` 下只有一个功能目录，审核也必须失败。
 - 同时存在 OpenSpec 和 Spec Kit 工件但配置未说明提供方。
 - Spec Kit 只有 `spec.md`，尚未完成计划或任务阶段。
 - 工件包含中文、CRLF 或无法按 UTF-8 严格解码的内容。
@@ -84,7 +91,7 @@
 - **FR-002**: 系统必须把工件发现、对象选择和工件加载抽象为提供方边界；核心追溯、风险、测试、策略和报告流水线不得直接依赖 OpenSpec 目录结构。
 - **FR-003**: 现有仅含 `openspec` 节的版本 1 配置必须继续有效，并保持原有默认行为。
 - **FR-004**: 新配置必须允许显式选择 `openspec` 或 `speckit`；自动模式同时发现两类工件时必须报歧义，不得静默选择。
-- **FR-005**: Spec Kit 审核对象选择顺序必须是命令行或配置中的显式值优先，其次是 `.specify/feature.json` 的 `feature_directory`；不得把 Git 分支名作为隐式选择依据。
+- **FR-005**: Spec Kit 审核对象选择顺序必须是命令行或配置中的显式值优先，其次是 `.specify/feature.json` 的 `feature_directory`。三者都没有给出有效对象时必须失败，不得因只发现一个功能目录而自动选择，也不得把 Git 分支名作为隐式选择依据。
 - **FR-006**: 系统必须验证 Spec Kit 功能目录存在、位于仓库允许范围内且包含 `spec.md`，无效时在任何检查或网络调用前停止。
 - **FR-007**: 系统必须从 `spec.md` 解析稳定的 `FR-*` 标识、需求正文、来源行、用户故事、优先级和验收场景。
 - **FR-008**: 系统必须从 `tasks.md` 解析 `T*` 标识、完成状态、`[P]` 标记、`[USn]` 关联、正文和来源行。

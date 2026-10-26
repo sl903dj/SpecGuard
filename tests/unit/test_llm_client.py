@@ -10,7 +10,7 @@ from specguard.review.assisted import merge_llm_output, skipped_dimensions
 def _config() -> LlmConfig:
     return LlmConfig(
         enabled=True,
-        base_url="http://internal-model.example/v1",
+        base_url="http://10.0.0.8/v1",
         model="local",
         external_fallback=False,
         timeout_seconds=1,
@@ -23,6 +23,14 @@ def test_unconfigured_dimensions_are_skipped() -> None:
     checks = skipped_dimensions()
     assert checks
     assert all(item.status.value == "SKIPPED" for item in checks)
+
+
+def test_client_rejects_public_endpoint_before_request() -> None:
+    with pytest.raises(ProviderError, match="内网"):
+        LlmClient(
+            LlmConfig(enabled=True, base_url="https://api.openai.com/v1"),
+            transport=httpx.MockTransport(lambda request: httpx.Response(200, json={})),
+        )
 
 
 def test_client_refuses_other_host() -> None:
@@ -73,7 +81,7 @@ def test_retries_same_host_and_sends_env_token(monkeypatch: pytest.MonkeyPatch) 
     payload = client.post_review({"messages": []})
     assert payload == {"findings": []}
     assert len(calls) == 2
-    assert all(call.url.host == "internal-model.example" for call in calls)
+    assert all(call.url.host == "10.0.0.8" for call in calls)
     assert calls[0].headers["authorization"] == "Bearer supersecretvalue"
     assert "supersecretvalue" not in str(payload)
 

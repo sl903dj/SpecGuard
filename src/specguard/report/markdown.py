@@ -19,13 +19,47 @@ def render_markdown(report: ReviewReport) -> str:
         lines.append("有证据不足、含糊需求、模型假设或互相冲突的结论，需要工程师复核。")
     else:
         lines.append("没有额外的人工复核提示。这仍然不是代码安全的证明。")
+    provider = report.artifacts.provider or report.metadata.artifact_provider or "未识别"
+    subject = report.artifacts.subject_id or report.metadata.subject_id or "未选择"
+    selection = report.artifacts.selection_source or report.metadata.selection_source or "不可用"
+    provider_label = {
+        "speckit": "Spec Kit",
+        "openspec": "OpenSpec",
+    }.get(provider, "需求")
+    lines.extend(
+        [
+            "",
+            "## 工件来源",
+            "",
+            f"- 工件提供方: {provider}",
+            f"- 审核对象: {subject}",
+            f"- 选择来源: {selection}",
+            f"- {provider_label} 工件完整性",
+            "- 已找到工件: " + (", ".join(report.artifacts.found) or "无"),
+            "- 缺失工件: " + (", ".join(report.artifacts.missing) or "无"),
+        ]
+    )
     lines.extend(["", "## 需求覆盖", ""])
     if not report.artifacts.available:
         lines.append("基于需求的审核不可用。")
+    lines.append(f"- 需求总数: {len(report.requirements)}")
     lines.append(f"- 直接证据: {report.summary.direct_count}")
     lines.append(f"- 仅有推断: {report.summary.inferred_count}")
     lines.append(f"- 证据不足: {report.summary.insufficient_count}")
     lines.append(f"- 任务完整性缺口: {report.summary.task_gap_count}")
+    if report.tasks:
+        for task in report.tasks:
+            state = "已完成" if task.marked_complete else "未完成"
+            lines.append(
+                f"- 任务 {task.identifier}: {state} 支撑 {task.support} @ {task.source_file}:{task.source_line}"
+            )
+    else:
+        lines.append("- 任务明细: 无")
+    if report.artifacts.context_documents:
+        for document in report.artifacts.context_documents:
+            lines.append(f"- 上下文 {document.kind}: {document.path}")
+    else:
+        lines.append("- 上下文工件: 无")
     for requirement in report.requirements:
         if requirement.ambiguous and requirement.ambiguity_reason:
             lines.append(f"- 含糊需求 {requirement.identifier}: {requirement.ambiguity_reason}")
