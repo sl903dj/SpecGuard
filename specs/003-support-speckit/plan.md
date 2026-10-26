@@ -8,7 +8,7 @@
 
 ## Summary
 
-SpecGuard 在保留 OpenSpec 行为的同时，增加 GitHub Spec Kit 工件审核能力。系统从 `spec.md` 和 `tasks.md` 提取稳定的 `FR-*`、`T*` 标识及验收信息，并登记计划、研究、数据模型、契约和检查清单作为只读上下文。
+SpecGuard v0.2 在保留 OpenSpec 行为的同时，增加 GitHub Spec Kit 工件审核能力。系统从 `spec.md` 和 `tasks.md` 提取稳定的 `FR-*`、`T*` 标识及验收信息，并登记计划、研究、数据模型、契约和检查清单作为只读上下文。
 
 实现采用中立 `ArtifactProvider` 边界：OpenSpec 与 Spec Kit 适配器负责各自的发现、选择、校验和解析，输出统一 `ArtifactBundle`；现有追溯、测试有效性、风险、策略和报告流水线继续消费规范化模型。Spec Kit 对象选择遵循显式 CLI/配置、`.specify/feature.json`、歧义失败的顺序，不使用 Git 分支名猜测。
 
@@ -30,7 +30,7 @@ SpecGuard 在保留 OpenSpec 行为的同时，增加 GitHub Spec Kit 工件审�
 
 **Constraints**: 旧版 OpenSpec 配置无需修改；选择错误必须在检查前失败；不得修改 Spec Kit 状态或工件；不得将计划文字当实现证据；不新增任意外部校验命令
 
-**Scale/Scope**: 首版支持一个审核命令选择一个 OpenSpec 变更或 Spec Kit 功能；不支持同时合并两种提供方的需求，也不改变 Java 审核范围
+**Scale/Scope**: v0.2 支持一个审核命令选择一个 OpenSpec 变更或 Spec Kit 功能；不支持同时合并两种提供方的需求，也不改变 Java 审核范围
 
 ## Constitution Check
 
@@ -45,7 +45,7 @@ SpecGuard 在保留 OpenSpec 行为的同时，增加 GitHub Spec Kit 工件审�
 | III. 检查状态诚实 | 通过 | 工件选择和校验错误在检查前失败，不降级为通过 |
 | IV. 辅助审查只是假设 | 通过 | 新上下文仍经过遮盖、截断和假设标记 |
 | V. 默认只读且留在内部 | 通过 | `.specify/feature.json` 和功能目录只读；不新增外部服务 |
-| v0.1 范围 | 通过 | 仍审核 Git 管理的 Java 服务端项目，只扩展需求工件格式 |
+| v0.1 版本边界 | 通过 | v0.1 仍只支持 OpenSpec；本功能明确作为 v0.2 交付 |
 | 先测试后实现 | 通过 | 提供方契约和 Spec Kit 夹具先锁定失败行为 |
 | 简单设计优先 | 通过 | 一个小型 provider 边界复用现有核心，不复制审核流水线 |
 
@@ -127,4 +127,4 @@ tests/
 5. 扩展配置与 CLI，处理新旧字段、`--subject`/`--change` 冲突和 auto 歧义。
 6. 将报告契约升级到 1.1，增加提供方、对象和选择来源，并保留弃用别名。
 7. 把上下文文档接入受限辅助审查，验证遮盖、截断和不可信输入规则。
-8. 更新配置模板、使用说明和报告解释，运行完整 OpenSpec 与 Spec Kit 端到端回归。
+8. 将产品版本更新为 v0.2，更新配置模板、使用说明和报告解释，运行完整 OpenSpec 与 Spec Kit 端到端回归。

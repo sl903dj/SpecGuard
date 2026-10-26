@@ -3,6 +3,7 @@
 **Feature Branch**: `003-support-speckit`
 **Created**: 2026-10-26
 **Status**: Draft
+**Target Release**: SpecGuard v0.2
 **Input**: “在现有 OpenSpec 支持之外，让 SpecGuard 支持审核 GitHub Spec Kit 的规格、计划和任务工件。”
 
 ## User Scenarios & Testing
@@ -123,4 +124,5 @@
 - 本功能支持 GitHub Spec Kit 当前标准工件布局：项目根含 `.specify/`，功能工件位于 `specs/<feature>/`。
 - Spec Kit 没有与 `openspec validate` 完全对等且稳定的统一验证命令，因此首版以内置结构校验为主。
 - “兼容 OpenSpec”指旧配置、CLI 语义和审核结论继续工作；结构化报告因新增提供方元数据提升次版本，并提供弃用字段过渡。
-- 本功能不改变 SpecGuard 对 Java 服务端、只读审核、建议模式和内网辅助审查的既有范围。
+- 本功能作为 SpecGuard v0.2 交付；v0.1 继续遵守宪章中“只审核 OpenSpec”的范围。
+- 除新增 Spec Kit 需求工件格式外，本功能不改变 Java 服务端、只读审核、建议模式和内网辅助审查范围。
