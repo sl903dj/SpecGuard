@@ -92,6 +92,7 @@ class Requirement(_Model):
     identifier: str
     title: str
     change_semantics: Semantics | None
+    capability: str | None = None
     user_story_id: str | None = None
     priority: str | None = None
     scenarios: list[Scenario] = Field(default_factory=list)
@@ -175,6 +176,8 @@ class Metadata(_Model):
     artifact_provider: Literal["openspec", "speckit"] | None = None
     subject_id: str | None = None
     selection_source: Literal["cli", "config", "feature_state", "legacy_config"] | None = None
+    subject_kind: Literal["current", "change", "feature"] | None = None
+    tasks_available: bool = True
     started_at: str
     finished_at: str
     limitations: list[str] = Field(default_factory=list)
@@ -225,6 +228,8 @@ class ArtifactReport(_Model):
     provider: Literal["openspec", "speckit"] | None = None
     subject_id: str | None = None
     selection_source: Literal["cli", "config", "feature_state", "legacy_config"] | None = None
+    subject_kind: Literal["current", "change", "feature"] | None = None
+    tasks_available: bool = True
     found: list[str] = Field(default_factory=list)
     missing: list[str] = Field(default_factory=list)
     context_documents: list[ArtifactContextEntry] = Field(default_factory=list)
@@ -234,7 +239,7 @@ class ArtifactReport(_Model):
 
 
 class ReviewReport(_Model):
-    schema_version: Literal["1.1"] = "1.1"
+    schema_version: Literal["1.2"] = "1.2"
     review_status: ReviewStatus
     policy: PolicyView
     metadata: Metadata

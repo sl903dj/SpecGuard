@@ -40,7 +40,7 @@ def test_explicit_speckit_review_is_traceable_and_read_only(tmp_path: Path) -> N
     assert report.summary.task_gap_count == 1
     payload = render_json(report)
     markdown = render_markdown(report)
-    assert payload["schema_version"] == "1.1"
+    assert payload["schema_version"] == "1.2"
     assert payload["metadata"]["artifact_provider"] == "speckit"
     assert payload["metadata"]["subject_id"] == "003-demo"
     assert payload["artifacts"]["provider"] == "speckit"

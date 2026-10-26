@@ -42,10 +42,26 @@ def _apply_overrides(
     formats: str | None,
     output: str | None,
     subject: str | None = None,
+    baseline: bool = False,
 ) -> SpecGuardConfig:
     data = loaded.model_dump()
     if loaded.artifacts is not None and "openspec" not in loaded.model_fields_set:
         data.pop("openspec", None)
+    if baseline and (change is not None or subject is not None or loaded.artifact_provider_config().subject):
+        raise ConfigError("--baseline 与变更选择冲突")
+    if baseline:
+        provider = loaded.artifact_provider_config()
+        if provider.provider not in {"openspec", "auto"}:
+            raise ConfigError("--baseline 仅适用于 OpenSpec 提供方")
+        data["artifacts"] = {
+            "provider": "openspec",
+            "root": provider.root or "openspec",
+            "subject": None,
+            "subject_kind": "current",
+            "include_context": provider.include_context,
+        }
+        if data.get("openspec") is not None:
+            data["openspec"]["change"] = None
     if change is not None:
         provider = loaded.artifact_provider_config().provider
         if provider not in {"openspec", "auto"}:
@@ -93,8 +109,9 @@ def review(
     policy: str | None = typer.Option(None, "--policy"),
     formats: str | None = typer.Option(None, "--format"),
     output: str | None = typer.Option(None, "--output"),
+    baseline: bool = typer.Option(False, "--baseline"),
 ) -> None:
-    """对选定变更执行一次只读审核。"""
+    """对选定变更或当前规范执行一次只读审核。"""
     try:
         loaded = _apply_overrides(
             load_config(config),
@@ -107,8 +124,14 @@ def review(
             formats,
             output,
             subject,
+            baseline,
         )
-        report, code = run_review(loaded, config, cli_subject=subject or change)
+        report, code = run_review(
+            loaded,
+            config,
+            cli_subject=None if baseline else (subject or change),
+            baseline=baseline,
+        )
     except (ConfigError, UsageError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(USAGE) from exc

@@ -116,6 +116,17 @@ def test_artifact_root_must_be_repository_relative(tmp_path: Path) -> None:
         load_config(_write(tmp_path, data))
 
 
+def test_current_subject_kind_rejects_a_change_name(tmp_path: Path) -> None:
+    data = _base()
+    data["artifacts"] = {
+        "provider": "openspec",
+        "subject_kind": "current",
+        "subject": "add-order",
+    }
+    with pytest.raises(ConfigError, match="subject"):
+        load_config(_write(tmp_path, data))
+
+
 def test_matching_dual_config_is_accepted_and_conflicts_rejected(tmp_path: Path) -> None:
     data = _base()
     data["openspec"] = {"root": "openspec", "change": "one"}

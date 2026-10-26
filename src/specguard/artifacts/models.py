@@ -8,6 +8,7 @@ from specguard.models.entities import MainRequirement, Requirement, TaskItem, Us
 ProviderName = Literal["openspec", "speckit", "auto"]
 ConcreteProviderName = Literal["openspec", "speckit"]
 SelectionSource = Literal["cli", "config", "feature_state", "legacy_config"]
+SubjectKind = Literal["current", "change", "feature"]
 ContextKind = Literal[
     "plan",
     "research",
@@ -39,12 +40,17 @@ class ArtifactProviderConfig(_Strict):
     provider: ProviderName = "openspec"
     root: str | None = None
     subject: str | None = None
+    subject_kind: Literal["current", "change"] | None = None
     include_context: bool = True
 
     @model_validator(mode="after")
     def provider_defaults(self) -> "ArtifactProviderConfig":
         if self.root is None:
             self.root = "specs" if self.provider == "speckit" else "openspec"
+        if self.provider == "speckit" and self.subject_kind is not None:
+            raise ValueError("Spec Kit 的 subject_kind 必须为空")
+        if self.subject_kind == "current" and self.subject:
+            raise ValueError("subject_kind 为 current 时 subject 必须为空")
         return self
 
     @field_validator("root")
@@ -58,6 +64,7 @@ class ArtifactSubject(_Strict):
     subject_id: str
     directory: Path
     selection_source: SelectionSource
+    subject_kind: SubjectKind | None = None
 
     @field_validator("subject_id")
     @classmethod
@@ -95,6 +102,7 @@ class ArtifactBundle(_Strict):
     tasks: list[TaskItem] = Field(default_factory=list)
     context_documents: list[ContextDocument] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
+    tasks_available: bool = True
     main_specs: list[str] = Field(default_factory=list)
     main_requirements: list[MainRequirement] = Field(default_factory=list)
 

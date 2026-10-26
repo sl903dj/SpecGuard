@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+from specguard.errors import UsageError
 from specguard.models.entities import ArtifactReport, MainRequirement, Requirement, Scenario, TaskItem
 
 SECTION = {
@@ -38,11 +39,16 @@ def parse_requirements(change: str, text: str, source: str) -> list[Requirement]
             next_req = REQ_RE.search(block, match.end())
             if next_req:
                 body_end = next_req.start()
-            body = block[match.end() : body_end].strip()
+            raw_body = block[match.end() : body_end]
+            body = raw_body.strip()
             absolute = header.end() + match.start()
+            body_offset = header.end() + match.end()
             scenarios = [
-                Scenario(name=item.group(1).strip(), source_line=_line_of(text, header.end() + item.start()))
-                for item in SCEN_RE.finditer(body)
+                Scenario(
+                    name=item.group(1).strip(),
+                    source_line=_line_of(text, body_offset + item.start()),
+                )
+                for item in SCEN_RE.finditer(raw_body)
             ]
             ambiguous = (not scenarios) or ("TBD" in body) or ("待定" in body) or len(body) < 12
             reason = None
@@ -82,6 +88,88 @@ def parse_main_requirements(text: str, source: str) -> list[MainRequirement]:
             )
         )
     return items
+
+
+DELTA_HEADINGS = {"ADDED Requirements", "MODIFIED Requirements", "REMOVED Requirements"}
+
+
+def parse_current_requirements(text: str, source: str, capability: str) -> list[Requirement]:
+    headers = list(re.finditer(r"^## (.+)$", text, re.M))
+    delta_spans: list[tuple[int, int]] = []
+    for index, header in enumerate(headers):
+        if header.group(1).strip() not in DELTA_HEADINGS:
+            continue
+        end = headers[index + 1].start() if index + 1 < len(headers) else len(text)
+        delta_spans.append((header.end(), end))
+
+    def inside_delta(position: int) -> bool:
+        return any(start <= position < end for start, end in delta_spans)
+
+    matches = list(REQ_RE.finditer(text))
+    plain = [match for match in matches if not inside_delta(match.start())]
+    if matches and not plain:
+        raise UsageError(f"{source} 只含增量需求，请使用变更审核")
+    requirements: list[Requirement] = []
+    seen: set[str] = set()
+    for match in plain:
+        title = match.group(1).strip()
+        next_req = REQ_RE.search(text, match.end())
+        body_start = match.end()
+        raw_body = text[body_start : next_req.start() if next_req else len(text)]
+        body = raw_body.strip()
+        if not body:
+            raise UsageError(f"{source} 需求正文为空: {title}")
+        identifier = f"{capability}:{_slug(title)}"
+        if identifier in seen:
+            raise UsageError(f"{source} 中存在重复需求: {title}")
+        seen.add(identifier)
+        requirements.append(
+            Requirement(
+                identifier=identifier,
+                title=title,
+                capability=capability,
+                change_semantics=None,
+                scenarios=[
+                    Scenario(
+                        name=item.group(1).strip(),
+                        source_line=_line_of(text, body_start + item.start()),
+                    )
+                    for item in SCEN_RE.finditer(raw_body)
+                ],
+                source_file=source,
+                source_line=_line_of(text, match.start()),
+                body=body,
+                ambiguous=(not SCEN_RE.search(body)) or ("TBD" in body) or ("待定" in body) or len(body) < 12,
+                ambiguity_reason="需求信息不足或含糊，无法可靠核验"
+                if (not SCEN_RE.search(body)) or ("TBD" in body) or ("待定" in body) or len(body) < 12
+                else None,
+            )
+        )
+    return requirements
+
+
+def load_current(root: Path) -> tuple[list[str], list[Requirement]]:
+    specs = root / "specs"
+    found: list[str] = []
+    requirements: list[Requirement] = []
+    if not specs.is_dir():
+        return found, requirements
+    for path in sorted(specs.glob("**/spec.md")):
+        if not path.is_file():
+            continue
+        resolved = path.resolve()
+        try:
+            resolved.relative_to(root.resolve())
+        except ValueError as exc:
+            raise UsageError(f"OpenSpec 路径越出仓库范围: {path}") from exc
+        try:
+            text = resolved.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise UsageError(f"{path} 不是合法 UTF-8") from exc
+        relative = path.relative_to(root).as_posix()
+        found.append(relative)
+        requirements.extend(parse_current_requirements(text, str(path), path.parent.name))
+    return found, requirements
 
 
 def parse_tasks(text: str, source: str) -> list[TaskItem]:

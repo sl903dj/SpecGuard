@@ -13,7 +13,7 @@ specguard version
 specguard --help
 ```
 
-成功时退出码为 `0`。`specguard version` 的标准输出只有 `0.2.0`。这两条命令不读仓库，也不写报告。
+成功时退出码为 `0`。`specguard version` 的标准输出只有 `0.3.0`。这两条命令不读仓库，也不写报告。
 
 命令找不到时，先回到 [安装说明](install.md)，不要继续审核。下一步进入被审核仓库。
 
@@ -25,7 +25,7 @@ specguard --help
 
 ## 3. 确认需求工件
 
-OpenSpec 进行中的变更位于 `openspec/changes/<变更名>/`。Spec Kit 功能位于 `specs/<功能目录>/`，至少需要 `spec.md`，通常还包含 `plan.md` 和 `tasks.md`。
+OpenSpec 进行中的变更位于 `openspec/changes/<变更名>/`。从零建立的当前规范位于 `openspec/specs/<能力>/spec.md`，需求使用普通的 `### Requirement:`，不使用 ADDED、MODIFIED、REMOVED。Spec Kit 功能位于 `specs/<功能目录>/`，至少需要 `spec.md`，通常还包含 `plan.md` 和 `tasks.md`。
 
 Spec Kit 的选择优先级是 `--subject`、`artifacts.subject`、`.specify/feature.json`。三者都没有时退出 `4`，即使仓库里只有一个功能目录也不会自动选中，并且不运行检查、模型或报告写入。OpenSpec 的 `--change` 仍可用，但只作为 OpenSpec 兼容别名；不要与不同值的 `--subject` 混用。
 
@@ -75,7 +75,7 @@ specguard config validate --config specguard.yaml
 specguard review --config specguard.yaml --mode static --policy advisory
 ```
 
-Spec Kit 可加 `--subject <功能目录>`；OpenSpec 旧调用可继续使用 `--change <变更名>`。基线与配置不同时加上 `--base <版本>`。
+Spec Kit 可加 `--subject <功能目录>`；OpenSpec 旧调用可继续使用 `--change <变更名>`。审核整份当前规范时加上 `--baseline`，或在配置里写 `artifacts.subject_kind: current`。`--baseline` 与 `--change` 不能同时使用。仓库同时有当前规范和进行中的变更、又没有明确选择时，退出 `4`。基线与配置不同时加上 `--base <版本>`。
 
 成功时，标准输出是报告文件路径。默认文件是 `.specguard/reports/<变更名>-<目标提交前 12 位>.md` 和同名 `.json`。建议模式下，报告里可以有 `FAIL`，进程仍退出 `0`。这次审核对仓库的写入只有报告目录。用法或配置问题退出 `4`。必需检查未完成时退出 `3`，这不是干净通过。下一步阅读报告。
 
@@ -102,3 +102,7 @@ SpecGuard 不接受、不拒绝、也不合并变更。是否接受由工程师�
 ## v0.2 迁移
 
 旧的 `openspec` 配置无需修改。新配置推荐使用中立的 `artifacts`；同时提供两套配置时，provider、root 和 subject 必须一致。JSON 报告升级为 schema `1.1`，新增 `artifact_provider`、`subject_id`、`selection_source` 和上下文清单；旧的 `metadata.change` 与 `artifacts.selected_change` 仍保留。
+
+## v0.3 当前规范
+
+`subject_kind: current` 不能再写变更名。只写旧的 `openspec.change` 时，行为仍是变更审核。当前规范报告的 `metadata.change` 和 `artifacts.selected_change` 为空，`tasks_available` 为 `false`，Markdown 写明「任务完整性不可用」。schema 为 `1.2`，1.1 的字段名仍然保留。

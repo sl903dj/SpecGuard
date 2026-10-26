@@ -214,6 +214,7 @@ class SpecKitProvider:
         return ArtifactSubject(
             provider="speckit",
             subject_id=directory.name,
+            subject_kind="feature",
             directory=directory,
             selection_source=source,  # type: ignore[arg-type]
         )

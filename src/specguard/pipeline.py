@@ -18,6 +18,7 @@ from specguard.models.entities import (
     ArtifactContextEntry,
     ArtifactReport,
     CheckResult,
+    Evidence,
     Finding,
     Metadata,
     RedactionNote,
@@ -81,6 +82,14 @@ def findings_from_checks(checks: list[CheckResult]) -> list[Finding]:
     return findings
 
 
+def _range_has_code_or_tests(changed) -> bool:
+    for item in changed:
+        lowered = item.path.replace("\\", "/").lower()
+        if lowered.endswith(".java") or "/test/" in lowered or "/tests/" in lowered:
+            return True
+    return False
+
+
 def _counts(requirements, tasks) -> tuple[int, int, int, int]:
     direct = inferred = insufficient = 0
     for requirement in requirements:
@@ -134,6 +143,7 @@ def run_review(
     repo: Path | None = None,
     *,
     cli_subject: str | None = None,
+    baseline: bool = False,
 ) -> tuple[ReviewReport, int]:
     started = _now()
     root = discover_root(repo or (config_path.parent / config.project.root))
@@ -145,6 +155,7 @@ def run_review(
         cli_subject,
         include_main_specs=include_main,
         require_selection=config.openspec.require_change_selection,
+        baseline=baseline,
     )
     base = resolve_revision(root, config.git.base)
     target = resolve_revision(root, config.git.target)
@@ -167,22 +178,29 @@ def run_review(
         )
         requirements, tasks = [], []
         limitations.append("基于需求的审核不可用")
+        subject_kind = None
+        tasks_available = True
     else:
         selected = bundle.subject.subject_id
         artifact_provider = bundle.subject.provider
         selection_source = bundle.subject.selection_source
+        subject_kind = bundle.subject.subject_kind
+        tasks_available = bundle.tasks_available
+        change_name = None if subject_kind == "current" else selected
         artifacts = ArtifactReport(
             available=True,
             provider=artifact_provider,
             subject_id=selected,
             selection_source=selection_source,
+            subject_kind=subject_kind,
+            tasks_available=tasks_available,
             found=bundle.found,
             missing=bundle.missing,
             context_documents=[
                 ArtifactContextEntry(kind=item.kind, path=item.path)
                 for item in bundle.context_documents
             ],
-            selected_change=selected,
+            selected_change=change_name,
             main_specs=bundle.main_specs,
             main_requirements=bundle.main_requirements,
         )
@@ -192,6 +210,16 @@ def run_review(
     findings: list[Finding] = []
     findings.extend(link_requirements(requirements, changed, read_text))
     findings.extend(link_tasks(tasks, changed, read_text))
+    if subject_kind == "current" and not _range_has_code_or_tests(changed):
+        limitations.append("选定版本范围内没有可核验证据")
+        for requirement in requirements:
+            requirement.evidence = [
+                Evidence(
+                    status="insufficient",
+                    requirement_id=requirement.identifier,
+                    note="选定版本范围内没有可核验证据",
+                )
+            ]
     layout = detect_project(root)
     if layout.limitation:
         limitations.append(layout.limitation)
@@ -334,10 +362,12 @@ def run_review(
             base=base,
             target=target,
             head_sha=start_head,
-            change=selected,
+            change=None if subject_kind == "current" else selected,
             artifact_provider=artifact_provider,
             subject_id=selected,
             selection_source=selection_source,
+            subject_kind=subject_kind,
+            tasks_available=tasks_available,
             started_at=started,
             finished_at=_now(),
             limitations=limitations,

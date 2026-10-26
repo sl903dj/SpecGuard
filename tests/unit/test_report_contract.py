@@ -51,7 +51,7 @@ def _report(status: ReviewStatus = ReviewStatus.REVIEW_COMPLETE) -> ReviewReport
 
 def test_json_keeps_required_keys_and_version() -> None:
     payload = render_json(_report())
-    assert payload["schema_version"] == "1.1"
+    assert payload["schema_version"] == "1.2"
     assert REQUIRED <= set(payload)
     assert payload["summary"]["coverage_percent"] is None
     assert payload["summary"]["disclaimer"] == DISCLAIMER
@@ -86,6 +86,37 @@ def test_json_exposes_neutral_artifact_metadata_and_compatibility_aliases() -> N
         {"kind": "plan", "path": "specs/003-demo/plan.md"}
     ]
     assert payload["artifacts"]["selected_change"] == "003-demo"
+
+
+def test_current_spec_json_nulls_change_aliases_and_keeps_them() -> None:
+    report = _report()
+    report.metadata.artifact_provider = "openspec"
+    report.metadata.subject_id = "current"
+    report.metadata.selection_source = "legacy_config"
+    report.metadata.subject_kind = "current"
+    report.metadata.tasks_available = False
+    report.metadata.change = None
+    report.artifacts = ArtifactReport(
+        available=True,
+        provider="openspec",
+        subject_id="current",
+        selection_source="legacy_config",
+        subject_kind="current",
+        tasks_available=False,
+        found=["specs/order/spec.md"],
+        missing=[],
+        selected_change=None,
+    )
+    payload = render_json(report)
+    assert payload["schema_version"] == "1.2"
+    assert payload["metadata"]["subject_kind"] == "current"
+    assert payload["metadata"]["tasks_available"] is False
+    assert payload["metadata"]["change"] is None
+    assert payload["artifacts"]["subject_kind"] == "current"
+    assert payload["artifacts"]["tasks_available"] is False
+    assert payload["artifacts"]["selected_change"] is None
+    assert "change" in payload["metadata"]
+    assert "selected_change" in payload["artifacts"]
 
 
 def test_empty_report_does_not_claim_the_code_is_clean() -> None:

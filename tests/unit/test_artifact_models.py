@@ -11,6 +11,30 @@ from specguard.artifacts.models import (
 )
 
 
+def test_subject_kind_constraints(tmp_path: Path) -> None:
+    current = ArtifactProviderConfig(provider="openspec", subject_kind="current")
+    assert current.subject is None
+    assert current.subject_kind == "current"
+    with pytest.raises(ValidationError, match="subject"):
+        ArtifactProviderConfig(provider="openspec", subject_kind="current", subject="add-order")
+    with pytest.raises(ValidationError, match="Spec Kit"):
+        ArtifactProviderConfig(provider="speckit", subject_kind="current")
+    change = ArtifactProviderConfig(provider="openspec", subject_kind="change", subject="add-order")
+    assert change.subject_kind == "change"
+    omitted = ArtifactProviderConfig(provider="openspec")
+    assert omitted.subject_kind is None
+    subject = ArtifactSubject(
+        provider="openspec",
+        subject_id="current",
+        subject_kind="current",
+        directory=tmp_path.resolve(),
+        selection_source="config",
+    )
+    bundle = ArtifactBundle(subject=subject, tasks_available=False)
+    assert bundle.subject.subject_id == "current"
+    assert bundle.tasks_available is False
+
+
 def test_artifact_config_defaults_and_relative_root() -> None:
     config = ArtifactProviderConfig(provider="speckit")
     assert config.include_context is True

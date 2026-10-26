@@ -43,6 +43,14 @@ def materialize(tmp: Path, name: str) -> Path:
     return dest
 
 
+def materialize_baseline(tmp: Path, name: str = "current_only") -> Path:
+    dest = tmp / name
+    shutil.copytree(FIXTURES / "baseline" / name, dest)
+    init_repo(dest)
+    commit_all(dest, "base")
+    return dest
+
+
 def materialize_speckit(
     tmp: Path,
     name: str = "standard",

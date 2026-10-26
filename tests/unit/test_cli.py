@@ -37,6 +37,22 @@ def test_change_is_rejected_for_speckit_before_review(tmp_path: Path) -> None:
     assert "OpenSpec" in result.output
 
 
+def test_baseline_and_change_are_rejected_before_review(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app,
+        [
+            "review",
+            "--config",
+            str(_config(tmp_path, "openspec")),
+            "--baseline",
+            "--change",
+            "add-order",
+        ],
+    )
+    assert result.exit_code == 4
+    assert "冲突" in result.output
+
+
 def test_conflicting_change_and_subject_are_rejected(tmp_path: Path) -> None:
     result = runner.invoke(
         app,

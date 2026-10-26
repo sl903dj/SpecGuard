@@ -18,6 +18,8 @@ def test_openspec_provider_matches_legacy_normalized_artifacts(tmp_path: Path) -
         include_main_specs=True,
     )
     assert bundle is not None
+    assert bundle.subject.subject_kind == "change"
+    assert bundle.tasks_available is True
     assert bundle.found == legacy_report.found
     assert bundle.missing == legacy_report.missing
     assert [

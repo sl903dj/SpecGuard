@@ -2,6 +2,14 @@ from specguard.models.entities import DISCLAIMER, ReviewReport
 from specguard.models.status import ReviewStatus
 
 
+def _range_has_code_or_tests(report: ReviewReport) -> bool:
+    for item in report.changed_files:
+        lowered = item.path.replace("\\", "/").lower()
+        if lowered.endswith(".java") or "/test/" in lowered or "/tests/" in lowered:
+            return True
+    return False
+
+
 def _status_heading(report: ReviewReport) -> str:
     return f"**状态**: {report.review_status.value}"
 
@@ -33,6 +41,12 @@ def render_markdown(report: ReviewReport) -> str:
             "",
             f"- 工件提供方: {provider}",
             f"- 审核对象: {subject}",
+            "- 对象种类: "
+            + {
+                "current": "当前规范",
+                "change": "进行中的变更",
+                "feature": "Spec Kit 功能",
+            }.get(report.artifacts.subject_kind or report.metadata.subject_kind or "", "未标明"),
             f"- 选择来源: {selection}",
             f"- {provider_label} 工件完整性",
             "- 已找到工件: " + (", ".join(report.artifacts.found) or "无"),
@@ -46,15 +60,22 @@ def render_markdown(report: ReviewReport) -> str:
     lines.append(f"- 直接证据: {report.summary.direct_count}")
     lines.append(f"- 仅有推断: {report.summary.inferred_count}")
     lines.append(f"- 证据不足: {report.summary.insufficient_count}")
-    lines.append(f"- 任务完整性缺口: {report.summary.task_gap_count}")
-    if report.tasks:
-        for task in report.tasks:
-            state = "已完成" if task.marked_complete else "未完成"
-            lines.append(
-                f"- 任务 {task.identifier}: {state} 支撑 {task.support} @ {task.source_file}:{task.source_line}"
-            )
+    kind = report.artifacts.subject_kind or report.metadata.subject_kind
+    if kind == "current" and not _range_has_code_or_tests(report):
+        lines.append("- 选定版本范围内没有可核验证据")
+    tasks_available = report.artifacts.tasks_available and report.metadata.tasks_available
+    if not tasks_available:
+        lines.append("- 任务完整性不可用")
     else:
-        lines.append("- 任务明细: 无")
+        lines.append(f"- 任务完整性缺口: {report.summary.task_gap_count}")
+        if report.tasks:
+            for task in report.tasks:
+                state = "已完成" if task.marked_complete else "未完成"
+                lines.append(
+                    f"- 任务 {task.identifier}: {state} 支撑 {task.support} @ {task.source_file}:{task.source_line}"
+                )
+        else:
+            lines.append("- 任务明细: 无")
     if report.artifacts.context_documents:
         for document in report.artifacts.context_documents:
             lines.append(f"- 上下文 {document.kind}: {document.path}")

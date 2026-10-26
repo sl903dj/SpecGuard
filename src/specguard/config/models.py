@@ -205,5 +205,6 @@ class SpecGuardConfig(_Strict):
             provider="openspec",
             root=self.openspec.root,
             subject=self.openspec.change,
+            subject_kind="change" if self.openspec.change else None,
             include_context=True,
         )

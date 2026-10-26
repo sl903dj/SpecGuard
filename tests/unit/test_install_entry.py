@@ -14,10 +14,10 @@ def test_console_script_is_the_install_entry() -> None:
     assert "nuitka" not in serialized
 
 
-def test_package_and_runtime_versions_are_0_2_0() -> None:
+def test_package_and_runtime_versions_are_0_3_0() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert project["project"]["version"] == "0.2.0"
-    assert __version__ == "0.2.0"
+    assert project["project"]["version"] == "0.3.0"
+    assert __version__ == "0.3.0"
 
 
 def test_install_doc_does_not_require_cloning_into_the_reviewed_repo() -> None:

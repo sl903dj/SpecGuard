@@ -72,17 +72,23 @@ def load_bundle(
     *,
     include_main_specs: bool = True,
     require_selection: bool = True,
+    baseline: bool = False,
 ) -> ArtifactBundle | None:
     provider, effective = resolve_provider(repository, config)
     if (
         provider.name == "openspec"
         and not require_selection
+        and not baseline
+        and effective.subject_kind is None
         and cli_subject is None
         and effective.subject is None
         and len(provider.discover(repository, effective)) > 1
     ):
-        return None
-    subject = provider.select(repository, effective, cli_subject)
+        from specguard.artifacts.openspec import has_current_specs
+
+        if not has_current_specs(repository, effective):
+            return None
+    subject = provider.select(repository, effective, cli_subject, baseline=baseline) if provider.name == "openspec" else provider.select(repository, effective, cli_subject)
     if subject is None:
         return None
     provider.validate(subject)

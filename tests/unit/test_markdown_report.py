@@ -1,8 +1,10 @@
 from specguard.models.entities import (
     ArtifactContextEntry,
     ArtifactReport,
+    ChangedFile,
     Metadata,
     PolicyView,
+    Requirement,
     ReviewReport,
     Summary,
     TaskItem,
@@ -66,6 +68,64 @@ def test_markdown_renders_neutral_artifact_metadata() -> None:
     assert "上下文 plan: specs/003-demo/plan.md" in text
     assert "缺少 OpenSpec" not in text
     assert "长期规范" not in text
+
+
+def test_markdown_distinguishes_current_spec_from_change() -> None:
+    current = _report("openspec")
+    current.metadata.change = None
+    current.metadata.subject_id = "current"
+    current.metadata.subject_kind = "current"
+    current.metadata.tasks_available = False
+    current.artifacts.subject_id = "current"
+    current.artifacts.subject_kind = "current"
+    current.artifacts.tasks_available = False
+    current.artifacts.selected_change = None
+    current.artifacts.found = ["specs/order/spec.md"]
+    current.artifacts.missing = []
+    current.tasks = []
+    text = render_markdown(current)
+    assert "当前规范" in text
+    assert "任务完整性不可用" in text
+    assert "任务完整性缺口" not in text
+    assert "proposal.md" not in text
+    assert "tasks.md" not in text
+
+    change = _report("openspec")
+    change.metadata.subject_kind = "change"
+    change.artifacts.subject_kind = "change"
+    text = render_markdown(change)
+    assert "进行中的变更" in text
+    assert "任务完整性缺口" in text
+    assert "当前规范" not in text
+
+
+def test_markdown_states_when_current_spec_range_has_no_code_or_tests() -> None:
+    report = _report("openspec")
+    report.metadata.subject_kind = "current"
+    report.metadata.subject_id = "current"
+    report.metadata.change = None
+    report.metadata.tasks_available = False
+    report.artifacts.subject_kind = "current"
+    report.artifacts.subject_id = "current"
+    report.artifacts.tasks_available = False
+    report.artifacts.selected_change = None
+    report.changed_files = [
+        ChangedFile(path="openspec/specs/order/spec.md", change_type="modified")
+    ]
+    report.requirements = [
+        Requirement(
+            identifier="order:create-order",
+            title="Create order",
+            change_semantics=None,
+            capability="order",
+            source_file="openspec/specs/order/spec.md",
+            source_line=3,
+        )
+    ]
+    report.summary.insufficient_count = 1
+    text = render_markdown(report)
+    assert "选定版本范围内没有可核验证据" in text
+    assert "order:create-order: insufficient" in text
 
 
 def test_markdown_uses_provider_specific_completeness_label() -> None:

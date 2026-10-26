@@ -10,6 +10,8 @@ Set `artifacts.provider` to `openspec`, `speckit`, or `auto`. Use `--subject <fe
 
 Version 0.2 retains the legacy OpenSpec configuration and `--change` alias. New integrations should use `artifacts.subject` / `--subject` and report schema 1.1 `subject_id`; `metadata.change` and `artifacts.selected_change` are compatibility aliases.
 
+Version 0.3 reviews a current OpenSpec at `openspec/specs/<capability>/spec.md`. Set `artifacts.subject_kind: current` or pass `--baseline`. If that tree and an in-progress change both exist and neither is selected, review exits `4` and tells you to use `--baseline` or `--change`. Reports use schema `1.2`.
+
 ## Install
 
 ```bash

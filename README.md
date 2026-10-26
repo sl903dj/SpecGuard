@@ -10,6 +10,8 @@ SpecGuard 是本地只读的变更质量门。它审核一份 OpenSpec 变更或
 
 v0.2 保留 OpenSpec 的 `openspec` 配置和 `--change` 别名。新配置和报告消费者应使用 `artifacts.subject` / `--subject` 以及 schema 1.1 的 `subject_id`；`metadata.change` 和 `artifacts.selected_change` 仅为兼容字段。详见 [使用说明](docs/usage.md)。
 
+v0.3 可以审核从零建立的当前 OpenSpec，位置是 `openspec/specs/<能力>/spec.md`。配置写 `artifacts.subject_kind: current`，或在命令中加 `--baseline`。仓库里同时有当前规范和进行中的变更、又没有明确选择时，审核退出 `4`，并提示使用 `--baseline` 或 `--change`。报告 schema 为 `1.2`。
+
 ## 安装
 
 ```bash
