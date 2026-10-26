@@ -97,7 +97,7 @@ SpecGuard 不接受、不拒绝、也不合并变更。是否接受由工程师�
 
 把第 7 步的 `--policy advisory` 换成 `--policy strict` 时，只有已确认的确定性失败才会退出 `2`。模型假设不单独造成阻断。
 
-辅助审查必须先在配置里启用 `llm` 并填写内网 `llm.base_url`，再使用 `--mode assisted`。未配置模型时保持静态模式。
+辅助审查必须先在配置里启用 `llm` 并填写内网 `llm.base_url`，再使用 `--mode assisted`。未配置模型时保持静态模式。内网地址的限制、密钥变量、模型不可用时怎么读报告，以及按退出码排障和持续集成，写在 [docs/operations.md](operations.md)。
 
 ## v0.2 迁移
 

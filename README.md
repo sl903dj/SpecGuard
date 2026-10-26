@@ -29,7 +29,7 @@ specguard version
 
 安装和运行的其余步骤见 [docs/install.md](docs/install.md)。不能访问 GitHub 或 PyPI 时，按 [内网离线安装](docs/install.md#offline-install) 把源码和依赖轮子手工传入内网。
 
-安装完成后的使用步骤见 [docs/usage.md](docs/usage.md)。
+安装完成后的使用步骤见 [docs/usage.md](docs/usage.md)。三种审核对象的操作、按退出码排障、内网辅助审查和持续集成见 [docs/operations.md](docs/operations.md)。
 
 ## 许可证
 

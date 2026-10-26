@@ -12,7 +12,7 @@ v0.1 的安装入口是 Python 控制台脚本，不要求原生二进制。
 uv tool install "git+https://github.com/sl903dj/SpecGuard"
 ```
 
-安装完成后，到被审核仓库里按 [docs/usage.md](usage.md) 运行。该仓库只需要自己的 Git 历史、OpenSpec 变更和 `specguard.yaml`。
+安装完成后，到被审核仓库里按 [docs/usage.md](usage.md) 运行。该仓库需要自己的 Git 历史、`specguard.yaml`，以及一种需求工件：OpenSpec 进行中的变更、`openspec/specs/` 下的当前规范，或 Spec Kit 功能。操作、排障和内网辅助审查见 [docs/operations.md](operations.md)。
 
 ## 验证本地源码
 
@@ -71,4 +71,10 @@ specguard version
 
 ## 开发者
 
-开发和测试才使用 SpecGuard 源码检出。在本仓库安装开发依赖并运行测试。不要把这个源码检出复制进被审核仓库。
+开发和测试才使用 SpecGuard 源码检出。在含有 `pyproject.toml` 的检出根目录安装开发依赖并运行测试。不要把这个源码检出复制进被审核仓库。
+
+```bash
+uv venv
+uv pip install -e ".[dev]"
+.venv/bin/python -m pytest
+```
