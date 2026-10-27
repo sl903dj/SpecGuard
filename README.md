@@ -12,6 +12,8 @@ v0.2 保留 OpenSpec 的 `openspec` 配置和 `--change` 别名。新配置和�
 
 v0.3 可以审核从零建立的当前 OpenSpec，位置是 `openspec/specs/<能力>/spec.md`。配置写 `artifacts.subject_kind: current`，或在命令中加 `--baseline`。仓库里同时有当前规范和进行中的变更、又没有明确选择时，审核退出 `4`，并提示使用 `--baseline` 或 `--change`。报告 schema 为 `1.2`。
 
+v0.4 的报告 schema 为 `1.3`。需求证据和验收场景分开记录。审核 OpenSpec 变更时对照当前规范，并报告未声明冲突。历史对照读取报告目录中的 `calibration.json`，完成对照不会打开阻断。九类风险每次都有处置。证据范围默认仍是版本差异；`target-tree` 只适用于当前规范。变更涉及多个构建模块时，报告会点名仓库级命令没有分别覆盖的模块。
+
 ## 安装
 
 ```bash

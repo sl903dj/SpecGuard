@@ -25,7 +25,7 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
-`/tmp/specguard-install-check` 里没有 `src/specguard`。`specguard version` 应输出 `0.3.0`。
+`/tmp/specguard-install-check` 里没有 `src/specguard`。`specguard version` 应输出 `0.4.0`。
 
 ## 内网离线安装
 
@@ -67,7 +67,7 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
-该目录没有 `src/specguard`。`specguard version` 应输出 `0.3.0`。
+该目录没有 `src/specguard`。`specguard version` 应输出 `0.4.0`。
 
 ## 开发者
 

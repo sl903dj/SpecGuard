@@ -18,13 +18,27 @@ def _read(read_text, path: str) -> str:
     return read_text(path) or ""
 
 
+def _cached_reader(read_text):
+    cache: dict[str, str] = {}
+
+    def content(path: str) -> str:
+        if path not in cache:
+            cache[path] = _read(read_text, path)
+        return cache[path]
+
+    return content
+
+
 def link_requirements(
     requirements: list[Requirement],
     changed_files: list[ChangedFile],
     read_text=None,
+    evidence_files: list[ChangedFile] | None = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
     linked_paths: set[str] = set()
+    corpus = evidence_files if evidence_files is not None else changed_files
+    content_of = _cached_reader(read_text)
     for requirement in requirements:
         if requirement.change_semantics == "removed":
             requirement.evidence.append(
@@ -37,9 +51,11 @@ def link_requirements(
             continue
         direct = []
         inferred = []
-        for changed in changed_files:
+        for changed in corpus:
+            if changed.change_type == "deleted":
+                continue
             name = changed.path.rsplit("/", 1)[-1]
-            content = _read(read_text, changed.path)
+            content = content_of(changed.path)
             if requirement.identifier in content:
                 direct.append(changed.path)
             elif name and (name in requirement.body or name in requirement.title):
@@ -51,7 +67,7 @@ def link_requirements(
                     status="direct",
                     requirement_id=requirement.identifier,
                     file=direct[0],
-                    note="变更文件包含需求标识",
+                    note="只代表找到关联，不代表验收场景已经通过",
                 )
             )
         elif inferred:
@@ -61,7 +77,7 @@ def link_requirements(
                     status="inferred",
                     requirement_id=requirement.identifier,
                     file=inferred[0],
-                    note="仅有文件名重叠，不能单独证明需求已实现",
+                    note="不能单独证明需求已经实现",
                 )
             )
         else:
@@ -96,11 +112,12 @@ def link_tasks(
     read_text=None,
 ) -> list[Finding]:
     findings: list[Finding] = []
+    content_of = _cached_reader(read_text)
     for task in tasks:
         has_code = False
         has_test = False
         for changed in changed_files:
-            content = _read(read_text, changed.path)
+            content = content_of(changed.path)
             haystack = content + " " + changed.path
             if task.identifier not in haystack and task.text not in haystack:
                 continue

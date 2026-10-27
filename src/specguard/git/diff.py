@@ -56,6 +56,22 @@ def attach_ranges(files: list[ChangedFile], diff_text: str) -> None:
         current.line_ranges.append(LineRange(start=start, end=start + count - 1))
 
 
+def collect_tree_files(repo: Path, target: str, include_worktree: bool) -> list[ChangedFile]:
+    listed = run_git(["ls-tree", "-r", "--name-only", target], repo)
+    files = [
+        ChangedFile(path=path, change_type="added", committed=True)
+        for path in listed.stdout.splitlines()
+        if path.strip()
+    ]
+    if include_worktree:
+        known = {item.path for item in files}
+        work = run_git(["diff", "--name-only", "HEAD"], repo)
+        for path in work.stdout.splitlines():
+            if path.strip() and path not in known:
+                files.append(ChangedFile(path=path, change_type="modified", committed=False))
+    return files
+
+
 def collect_changes(
     repo: Path,
     base: str,

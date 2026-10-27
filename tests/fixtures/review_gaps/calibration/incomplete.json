@@ -1,0 +1,12 @@
+{
+  "complete": false,
+  "reviews": [
+    {
+      "subject_id": "add-order",
+      "finding_ids": ["F001", "F002"],
+      "verdicts": [{"finding_id": "F001", "verdict": "false_positive"}],
+      "misses": [],
+      "no_misses": true
+    }
+  ]
+}

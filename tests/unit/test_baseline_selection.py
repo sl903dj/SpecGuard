@@ -110,4 +110,4 @@ def test_explicit_change_excludes_other_current_requirements(tmp_path: Path) -> 
     assert bundle.subject.subject_kind == "change"
     assert {item.title for item in bundle.requirements} == {"Create order"}
     assert all(item.change_semantics == "added" for item in bundle.requirements)
-    assert all(item.capability is None for item in bundle.requirements)
+    assert {item.capability for item in bundle.requirements} == {"order"}

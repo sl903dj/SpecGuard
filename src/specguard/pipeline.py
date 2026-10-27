@@ -10,8 +10,8 @@ from specguard.checks.java import run_java_checks
 from specguard.checks.optional_tools import run_optional_checks
 from specguard.checks.test_results import note_missing_results, parse_test_result_file
 from specguard.config.models import SpecGuardConfig
-from specguard.git.diff import collect_changes
-from specguard.git.repository import discover_root, read_head, resolve_revision, worktree_dirty
+from specguard.git.diff import collect_changes, collect_tree_files
+from specguard.git.repository import discover_root, read_head, resolve_revision, run_git, worktree_dirty
 from specguard.llm.client import LlmClient
 from specguard.models.entities import (
     DISCLAIMER,
@@ -39,13 +39,17 @@ from specguard.review.assisted import (
     review_untrusted,
     skipped_dimensions,
 )
+from specguard.review.calibration import load_calibration
+from specguard.review.consistency import compare_current_spec
 from specguard.review.policy import decide
 from specguard.review.ranking import assign_ids, conflicts_for, highest_risks, reliable_checks
 from specguard.llm.redact import merge_redactions, redact
-from specguard.review.risk import existing_test_failure_note, missing_logic_context, review_risks
+from specguard.review.risk import existing_test_failure_note, missing_logic_context, review_risk_report
+from specguard.review.scenarios import assess_scenarios
 from specguard.review.test_adequacy import assess_tests
 from specguard.review.traceability import link_requirements, link_tasks
-from specguard.project.detect import detect_project
+from specguard.project.detect import coverage_for, detect_project
+from specguard.openspec.parser import load_current
 from specguard.errors import ProviderError, UsageError
 
 
@@ -59,6 +63,16 @@ def _reader(repo: Path):
         if not file.is_file():
             return ""
         return file.read_text(encoding="utf-8", errors="replace")
+
+    return read_text
+
+
+def _blob_reader(repo: Path, revision: str):
+    def read_text(path: str) -> str:
+        result = run_git(["show", f"{revision}:{path}"], repo)
+        if result.returncode != 0 or result.stdout is None:
+            return ""
+        return result.stdout
 
     return read_text
 
@@ -206,11 +220,22 @@ def run_review(
         )
         requirements, tasks = bundle.requirements, bundle.tasks
         limitations.extend(bundle.limitations)
+    if config.git.evidence_scope == "target_tree" and subject_kind != "current":
+        raise UsageError("完整内容证据范围只适用于当前规范")
     read_text = _reader(root)
+    evidence_files = changed
+    evidence_read = read_text
+    if config.git.evidence_scope == "target_tree":
+        evidence_files = collect_tree_files(root, target, config.git.include_worktree)
+        evidence_read = _blob_reader(root, target)
     findings: list[Finding] = []
-    findings.extend(link_requirements(requirements, changed, read_text))
+    findings.extend(link_requirements(requirements, changed, evidence_read, evidence_files))
     findings.extend(link_tasks(tasks, changed, read_text))
-    if subject_kind == "current" and not _range_has_code_or_tests(changed):
+    if (
+        config.git.evidence_scope == "range"
+        and subject_kind == "current"
+        and not _range_has_code_or_tests(changed)
+    ):
         limitations.append("选定版本范围内没有可核验证据")
         for requirement in requirements:
             requirement.evidence = [
@@ -220,6 +245,22 @@ def run_review(
                     note="选定版本范围内没有可核验证据",
                 )
             ]
+    scenario_assessments = assess_scenarios(requirements, evidence_files, evidence_read)
+    consistency_items = []
+    if artifact_provider == "openspec" and subject_kind == "change":
+        current_root = root / (provider_config.root or "openspec")
+        _found, current_requirements = load_current(current_root)
+        if not _found:
+            limitations.append("规范对照不可用")
+        else:
+            for item in current_requirements:
+                try:
+                    item.source_file = str(Path(item.source_file).resolve().relative_to(root.resolve()))
+                except ValueError:
+                    item.source_file = Path(item.source_file).name
+            consistency_items = compare_current_spec(requirements, current_requirements)
+    else:
+        limitations.append("未做 OpenSpec 当前规范对照")
     layout = detect_project(root)
     if layout.limitation:
         limitations.append(layout.limitation)
@@ -272,8 +313,26 @@ def run_review(
             missing = note_missing_results(test_check if test_check.status != CheckStatus.PASS else None)
             if missing and test_check.status != CheckStatus.PASS:
                 findings.append(missing)
-    findings.extend(review_risks(changed, read_text))
+    risk_findings, risk_dispositions = review_risk_report(changed, read_text)
+    findings.extend(risk_findings)
     limitations.extend(missing_logic_context(changed, read_text))
+    module_coverage = coverage_for(
+        root,
+        [item.path for item in changed],
+        config.checks.build.enabled or config.checks.tests.enabled,
+    )
+    if module_coverage.execution == "repository" and module_coverage.not_separately_covered:
+        checks.append(
+            CheckResult(
+                check_id="module-separation",
+                required=False,
+                status=CheckStatus.SKIPPED,
+                command=None,
+                diagnostic="仓库级命令没有按模块分别执行: "
+                + ", ".join(module_coverage.not_separately_covered),
+            )
+        )
+    calibration, calibration_redactions = load_calibration(report_dir)
     if config.checks.build.enabled or config.checks.tests.enabled:
         limitations.append("构建和测试命令可能生成文件，并执行项目自带脚本。")
     coverage_available = any(item.check_id == "jacoco" and item.status == CheckStatus.PASS for item in checks)
@@ -332,11 +391,20 @@ def run_review(
     findings = assign_ids(findings)
     conflicts = conflicts_for(findings)
     direct, inferred, insufficient, gaps = _counts(requirements, tasks)
-    needs_human = bool(insufficient or gaps or conflicts or any(item.ambiguous for item in requirements) or any(
-        item.evidence_status in {"hypothesis", "insufficient"} for item in findings
-    ))
+    needs_human = bool(
+        insufficient
+        or gaps
+        or conflicts
+        or any(item.ambiguous for item in requirements)
+        or any(item.evidence_status in {"hypothesis", "insufficient"} for item in findings)
+        or any(item.status == "human_review" for item in consistency_items)
+        or any(item.status == "gap" for item in scenario_assessments)
+    )
     end_head = read_head(root)
     status, blocked, reasons = decide(config.review, findings, checks)
+    redaction_notes = merge_redactions([*redaction_notes, *calibration_redactions])
+    if blocked and calibration.status != "complete":
+        calibration.notes.append("门禁依据不足")
     if end_head != start_head:
         status = ReviewStatus.REVIEW_INCOMPLETE
         blocked = False
@@ -368,6 +436,10 @@ def run_review(
             selection_source=selection_source,
             subject_kind=subject_kind,
             tasks_available=tasks_available,
+            evidence_scope=config.git.evidence_scope,
+            calibration=calibration,
+            module_coverage=module_coverage,
+            risk_dispositions=risk_dispositions,
             started_at=started,
             finished_at=_now(),
             limitations=limitations,
@@ -384,6 +456,8 @@ def run_review(
         checks=checks,
         findings=findings,
         conflicts=conflicts,
+        scenario_assessments=scenario_assessments,
+        consistency_items=consistency_items,
         artifacts=artifacts,
     )
     report.metadata.output_paths = _planned_paths(report, report_dir, list(config.report.formats))

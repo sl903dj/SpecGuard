@@ -12,6 +12,8 @@ Version 0.2 retains the legacy OpenSpec configuration and `--change` alias. New 
 
 Version 0.3 reviews a current OpenSpec at `openspec/specs/<capability>/spec.md`. Set `artifacts.subject_kind: current` or pass `--baseline`. If that tree and an in-progress change both exist and neither is selected, review exits `4` and tells you to use `--baseline` or `--change`. Reports use schema `1.2`.
 
+Version 0.4 reports use schema `1.3`. Requirement evidence and acceptance scenarios are recorded separately. An OpenSpec change is compared with the current spec, and undeclared conflicts are reported. Historical calibration is read from `calibration.json` in the report directory; completing it does not enable blocking. All nine risk classes receive a disposition. Evidence scope stays on the git range by default, and `target-tree` applies only to the current spec. When a change touches more than one build module, the report names the modules a repository-level command did not cover separately.
+
 ## Install
 
 ```bash

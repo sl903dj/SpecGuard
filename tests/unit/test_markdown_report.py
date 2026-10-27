@@ -1,7 +1,11 @@
 from specguard.models.entities import (
     ArtifactContextEntry,
     ArtifactReport,
+    CalibrationView,
     ChangedFile,
+    ConsistencyItem,
+    Evidence,
+    Finding,
     Metadata,
     PolicyView,
     Requirement,
@@ -54,6 +58,69 @@ def _report(provider: str) -> ReviewReport:
             )
         ],
     )
+
+
+def test_summary_states_evidence_conflicts_calibration_and_risk_in_order() -> None:
+    report = _report("openspec")
+    report.requirements = [
+        Requirement(
+            identifier="order:create-order",
+            title="Create order",
+            change_semantics="added",
+            source_file="openspec/changes/add-order/specs/order/spec.md",
+            source_line=3,
+            evidence=[
+                Evidence(
+                    status="insufficient",
+                    requirement_id="order:create-order",
+                    note="找不到实现证据",
+                )
+            ],
+        )
+    ]
+    report.consistency_items = [
+        ConsistencyItem(
+            capability="order",
+            current_requirement_id="order:create-order",
+            current_file="openspec/specs/order/spec.md",
+            current_line=4,
+            change_requirement_id="add-order:added:create-order",
+            change_file="openspec/changes/add-order/specs/order/spec.md",
+            change_line=8,
+            status="conflict",
+            summary="变更否定了当前规范中仍然有效的场景，且没有声明修改或删除",
+        ),
+        ConsistencyItem(
+            capability="order",
+            current_requirement_id="order:ship-notice",
+            current_file="openspec/specs/order/spec.md",
+            current_line=12,
+            change_requirement_id="add-order:added:ship-notice",
+            change_file="openspec/changes/add-order/specs/order/spec.md",
+            change_line=20,
+            status="human_review",
+            summary="无法判断是否冲突",
+        ),
+    ]
+    report.metadata.calibration = CalibrationView(status="incomplete", notes=["历史对照未完成"])
+    report.summary.highest_risks = ["F003"]
+    report.findings = [
+        Finding(
+            finding_id="F003",
+            category="business_logic",
+            severity="high",
+            summary="空的 catch 会吞掉异常",
+            failure_path="异常被空 catch 吃掉后，调用方会以为操作已经成功。",
+            evidence_status="confirmed",
+            origin="risk",
+        )
+    ]
+    text = render_markdown(report)
+    weak = text.index("- 最弱需求证据: insufficient")
+    conflicts = text.index("- 未声明冲突数量: 1")
+    calibration = text.index("- 历史对照未完成")
+    risk = text.index("- 应先看的最高风险: F003")
+    assert weak < conflicts < calibration < risk
 
 
 def test_markdown_renders_neutral_artifact_metadata() -> None:

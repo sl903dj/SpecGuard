@@ -44,7 +44,7 @@ def test_static_review_and_evidence_gap(tmp_path: Path) -> None:
     report_dir = repo / ".specguard" / "reports"
     markdown = next(report_dir.glob("*.md")).read_text(encoding="utf-8")
     payload = json.loads(next(report_dir.glob("*.json")).read_text(encoding="utf-8"))
-    assert payload["schema_version"] == "1.2"
+    assert payload["schema_version"] == "1.3"
     assert "需要人工审核" in markdown
     assert all("代码一定有错" not in item["summary"] for item in payload["findings"])
     assert any(item["support"] == "none" and item["marked_complete"] for item in payload["tasks"])

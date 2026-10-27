@@ -28,6 +28,7 @@ class GitConfig(_Strict):
     target: str = "HEAD"
     include_worktree: bool = False
     fail_on_uncommitted_changes: bool = True
+    evidence_scope: Literal["range", "target_tree"] = "range"
 
 
 class Dimensions(_Strict):

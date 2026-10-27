@@ -1,8 +1,27 @@
 import re
 from pathlib import Path
 
-from specguard.models.entities import ChangedFile, CheckResult, Finding, Location
+from specguard.models.entities import (
+    ChangedFile,
+    CheckResult,
+    Finding,
+    Location,
+    RiskClass,
+    RiskDisposition,
+)
 from specguard.models.status import CheckStatus
+
+RISK_CLASSES: tuple[RiskClass, ...] = (
+    "boundary",
+    "exception",
+    "null_empty",
+    "transaction",
+    "concurrency",
+    "authorization",
+    "compatibility",
+    "persisted_data",
+    "dependency_config",
+)
 
 EMPTY_CATCH = re.compile(r"catch\s*\([^)]*\)\s*\{\s*\}")
 BOUNDARY = re.compile(r"<=\s*[\w.]+\.(?:size|length)\(\)")
@@ -38,15 +57,24 @@ def _line_of(text: str, needle: str) -> int | None:
     return text.count("\n", 0, index) + 1
 
 
-def _insufficient(category: str, summary: str, path: str, line: int | None) -> Finding:
+def _insufficient(
+    category: str,
+    summary: str,
+    path: str,
+    line: int | None,
+    *,
+    failure_path: str | None = None,
+    risk_class: RiskClass | None = None,
+) -> Finding:
     return Finding(
         category=category,  # type: ignore[arg-type]
         severity="medium",
         summary=summary,
         evidence_status="insufficient",
         origin="risk",
+        risk_class=risk_class,
         location=_location(path, line, line),
-        failure_path=None,
+        failure_path=failure_path,
     )
 
 
@@ -79,6 +107,10 @@ def _path_risks(changed: ChangedFile, text: str) -> list[Finding]:
                 "数据保存或数据结构发生变化。这是假设，不是已核实的不兼容。",
                 changed.path,
                 line,
+                failure_path="已保存的数据结构发生变化后，旧数据可能无法读取。这是假设，不是已核实的不兼容。"
+                if line
+                else None,
+                risk_class="persisted_data" if line else None,
             )
         )
     return findings
@@ -97,6 +129,8 @@ def _context_findings(path: str, text: str) -> list[Finding]:
                 "可见接口映射，但本次变更里看不到授权检查。这不是已核实的授权缺陷。",
                 path,
                 line,
+                failure_path="请求进入映射方法时，看不到授权检查。这是假设，不是已核实的缺陷。",
+                risk_class="authorization",
             )
         )
     if re.search(r"\bsave\s*\(", text) and "@Transactional" not in text:
@@ -106,6 +140,8 @@ def _context_findings(path: str, text: str) -> list[Finding]:
                 "可见保存操作，但本次变更里看不到事务边界。这不是已核实的事务缺陷。",
                 path,
                 _line_of(text, "save"),
+                failure_path="保存发生时看不到事务边界。这是假设，不是已核实的缺陷。",
+                risk_class="transaction",
             )
         )
     if re.search(r"\bHashMap\s*<", text) and "ConcurrentHashMap" not in text and "synchronized" not in text:
@@ -115,6 +151,8 @@ def _context_findings(path: str, text: str) -> list[Finding]:
                 "可见共享可变映射，但本次变更里看不到并发控制。这不是已核实的并发缺陷。",
                 path,
                 _line_of(text, "HashMap"),
+                failure_path="共享映射被并发写入时可能丢失更新。这是假设，不是已核实的缺陷。",
+                risk_class="concurrency",
             )
         )
     if "setStatus(" in text and not re.search(r"if\s*\(", text):
@@ -174,6 +212,7 @@ def review_risks(changed_files: list[ChangedFile], read_text) -> list[Finding]:
                         failure_path="空值被忽略后，后续逻辑会按已有数据继续执行。",
                         evidence_status="confirmed",
                         origin="risk",
+                        risk_class="null_empty",
                         location=_location(changed.path, number, number),
                     )
                 )
@@ -186,6 +225,7 @@ def review_risks(changed_files: list[ChangedFile], read_text) -> list[Finding]:
                         failure_path="异常被空 catch 吃掉后，调用方会以为操作已经成功。",
                         evidence_status="confirmed",
                         origin="risk",
+                        risk_class="exception",
                         location=_location(changed.path, number, number),
                     )
                 )
@@ -198,6 +238,7 @@ def review_risks(changed_files: list[ChangedFile], read_text) -> list[Finding]:
                         failure_path="当索引等于集合大小时，访问会越界。",
                         evidence_status="confirmed",
                         origin="risk",
+                        risk_class="boundary",
                         location=_location(changed.path, number, number),
                     )
                 )
@@ -222,11 +263,32 @@ def review_risks(changed_files: list[ChangedFile], read_text) -> list[Finding]:
                         + caller_note,
                         evidence_status="insufficient",
                         origin="risk",
+                        risk_class="compatibility",
                         location=_location(changed.path, number, number),
-                        failure_path=None,
+                        failure_path="签名变化后，已有调用方可能无法按原约定调用。这是假设，不是已核实的不兼容。",
                     )
                 )
     return findings
+
+
+def review_risk_report(
+    changed_files: list[ChangedFile],
+    read_text,
+) -> tuple[list[Finding], list[RiskDisposition]]:
+    findings = review_risks(changed_files, read_text)
+    covered = {
+        item.risk_class
+        for item in findings
+        if item.risk_class and item.location is not None and item.failure_path
+    }
+    dispositions = [
+        RiskDisposition(
+            risk_class=name,
+            disposition="finding" if name in covered else "missing_context",
+        )
+        for name in RISK_CLASSES
+    ]
+    return findings, dispositions
 
 
 def existing_test_failure_note(check: CheckResult, changed_paths: set[str]) -> Finding | None:

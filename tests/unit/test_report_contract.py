@@ -8,6 +8,7 @@ from specguard.models.entities import (
     Metadata,
     PolicyView,
     ReviewReport,
+    Scenario,
     Summary,
 )
 from specguard.models.status import CheckStatus, ReviewStatus
@@ -49,9 +50,24 @@ def _report(status: ReviewStatus = ReviewStatus.REVIEW_COMPLETE) -> ReviewReport
     )
 
 
+def test_schema_13_defaults_keep_previous_aliases() -> None:
+    assert Scenario(name="Happy path", source_line=1).body == ""
+    payload = render_json(_report())
+    assert payload["schema_version"] == "1.3"
+    assert payload["metadata"]["evidence_scope"] == "range"
+    assert payload["metadata"]["calibration"]["status"] == "incomplete"
+    assert payload["scenario_assessments"] == []
+    assert payload["consistency_items"] == []
+    assert payload["metadata"]["risk_dispositions"] == []
+    assert payload["metadata"]["module_coverage"]["execution"] == "not_configured"
+    assert payload["metadata"]["tasks_available"] is True
+    assert "change" in payload["metadata"]
+    assert "selected_change" in payload["artifacts"]
+
+
 def test_json_keeps_required_keys_and_version() -> None:
     payload = render_json(_report())
-    assert payload["schema_version"] == "1.2"
+    assert payload["schema_version"] == "1.3"
     assert REQUIRED <= set(payload)
     assert payload["summary"]["coverage_percent"] is None
     assert payload["summary"]["disclaimer"] == DISCLAIMER
@@ -108,7 +124,7 @@ def test_current_spec_json_nulls_change_aliases_and_keeps_them() -> None:
         selected_change=None,
     )
     payload = render_json(report)
-    assert payload["schema_version"] == "1.2"
+    assert payload["schema_version"] == "1.3"
     assert payload["metadata"]["subject_kind"] == "current"
     assert payload["metadata"]["tasks_available"] is False
     assert payload["metadata"]["change"] is None

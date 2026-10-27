@@ -24,7 +24,7 @@ SpecGuard 只读。它不生成代码，不接受、不拒绝、也不合并变�
 
 ## 2. 每次审核的操作顺序
 
-1. `specguard version` 得到 `0.3.0`。
+1. `specguard version` 得到 `0.4.0`。
 2. `specguard config validate --config specguard.yaml`。成功时标准输出是「配置可用」，退出码 `0`。
 3. 工作区有未提交改动时，先提交，或在审核命令上加 `--include-worktree`。默认遇到脏工作区会退出 `4`。
 4. 在仓库根运行审核。下面三条分别对应三种对象：
@@ -99,7 +99,7 @@ specguard review --config specguard.yaml --subject 003-example --mode static --p
 
 ## 5. 内网运行和辅助审查
 
-内网机器的安装步骤在 [docs/install.md](install.md#offline-install)。装完后先离开源码目录，运行 `specguard version`，确认输出 `0.3.0`。之后的审核都在被审核仓库里进行，不再访问 `github.com` 或 `pypi.org`。
+内网机器的安装步骤在 [docs/install.md](install.md#offline-install)。装完后先离开源码目录，运行 `specguard version`，确认输出 `0.4.0`。之后的审核都在被审核仓库里进行，不再访问 `github.com` 或 `pypi.org`。
 
 静态审核不需要模型。没有内网模型时，保持 `review.mode: static` 和 `llm.enabled: false`。
 

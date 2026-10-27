@@ -16,6 +16,8 @@ artifacts:
 
 OpenSpec 新配置把 `provider` 改为 `openspec`、`root` 改为 `openspec`。审核 `openspec/specs/` 下的当前规范时增加 `subject_kind: current`，并且不要写 `subject`。审核进行中的变更时写 `subject_kind: change` 和 `subject: <变更名>`。两者同时存在又都没写时，审核退出 `4`。`provider: auto` 仅适合仓库中能唯一识别一种提供方时；两种工件并存会报歧义。旧的 `openspec:` 配置继续兼容，但与 `artifacts:` 同时出现时必须完全一致。只写 `openspec.change` 时仍按变更审核。
 
+`git.evidence_scope` 只接受 `range` 或 `target_tree`，默认 `range`。命令行写法是 `--evidence-scope range` 或 `--evidence-scope target-tree`。`target_tree` 只适用于当前规范。历史对照文件固定为报告目录下的 `calibration.json`，不写进配置。九类风险和模块覆盖由审核生成，也不需要单独的配置项。
+
 ## 最小
 
 不启用检查。只审核 OpenSpec 与 Git 差异能得到的证据。这一档只适合不跑构建的审核。

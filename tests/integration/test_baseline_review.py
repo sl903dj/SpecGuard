@@ -55,7 +55,7 @@ def test_current_only_review_uses_only_in_range_evidence(tmp_path: Path) -> None
     assert {item["path"] for item in payload["changed_files"]} == {
         "src/main/java/com/example/Order.java"
     }
-    assert payload["schema_version"] == "1.2"
+    assert payload["schema_version"] == "1.3"
     assert payload["metadata"]["subject_kind"] == "current"
     assert payload["metadata"]["subject_id"] == "current"
     assert payload["metadata"]["tasks_available"] is False

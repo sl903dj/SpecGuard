@@ -1,6 +1,6 @@
 [project]
 name = "specguard"
-version = "0.3.0"
+version = "0.4.0"
 description = "Read-only quality gate for AI-generated code changes"
 license = "Apache-2.0"
 requires-python = ">=3.11"

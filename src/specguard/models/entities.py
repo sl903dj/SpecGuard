@@ -19,6 +19,18 @@ Category = Literal[
     "test_adequacy",
     "regression",
 ]
+RiskClass = Literal[
+    "boundary",
+    "exception",
+    "null_empty",
+    "transaction",
+    "concurrency",
+    "authorization",
+    "compatibility",
+    "persisted_data",
+    "dependency_config",
+]
+EvidenceScopeName = Literal["range", "target_tree"]
 
 
 class _Model(BaseModel):
@@ -78,6 +90,7 @@ class Evidence(_Model):
 class Scenario(_Model):
     name: str
     source_line: int
+    body: str = ""
 
 
 class UserStory(_Model):
@@ -140,6 +153,7 @@ class Finding(_Model):
     failure_path: str | None = None
     evidence_status: Claim
     origin: str
+    risk_class: RiskClass | None = None
     location: Location | None = None
     related_requirement_ids: list[str] = Field(default_factory=list)
     related_task_ids: list[str] = Field(default_factory=list)
@@ -165,6 +179,60 @@ class RedactionNote(_Model):
     count: int
 
 
+class ScenarioAssessment(_Model):
+    requirement_id: str
+    scenario_name: str | None = None
+    status: Literal["supported", "gap", "unavailable"]
+    test_file: str | None = None
+    test_line: int | None = None
+    note: str = ""
+
+    @model_validator(mode="after")
+    def support_needs_location(self) -> "ScenarioAssessment":
+        if self.status == "supported":
+            if not self.test_file or self.test_line is None or self.test_line <= 0:
+                raise ValueError("已有测试支撑必须给出测试位置")
+        elif not self.note:
+            raise ValueError("缺口和不可用必须说明原因")
+        return self
+
+
+class ConsistencyItem(_Model):
+    capability: str
+    current_requirement_id: str
+    current_file: str
+    current_line: int
+    change_requirement_id: str | None = None
+    change_file: str
+    change_line: int
+    status: Literal["conflict", "human_review"]
+    summary: str
+
+    @model_validator(mode="after")
+    def real_sources(self) -> "ConsistencyItem":
+        if self.current_line <= 0 or self.change_line <= 0:
+            raise ValueError("不得伪造行号")
+        return self
+
+
+class CalibrationView(_Model):
+    status: Literal["incomplete", "complete"] = "incomplete"
+    completed_review_count: int = 0
+    rejected_complete_mark: bool = False
+    notes: list[str] = Field(default_factory=list)
+
+
+class RiskDisposition(_Model):
+    risk_class: RiskClass
+    disposition: Literal["finding", "missing_context"]
+
+
+class ModuleCoverage(_Model):
+    changed_modules: list[str] = Field(default_factory=list)
+    execution: Literal["repository", "unrecognized", "not_configured"] = "not_configured"
+    not_separately_covered: list[str] = Field(default_factory=list)
+
+
 class Metadata(_Model):
     tool_version: str
     config_version: int
@@ -178,6 +246,10 @@ class Metadata(_Model):
     selection_source: Literal["cli", "config", "feature_state", "legacy_config"] | None = None
     subject_kind: Literal["current", "change", "feature"] | None = None
     tasks_available: bool = True
+    evidence_scope: EvidenceScopeName = "range"
+    calibration: CalibrationView = Field(default_factory=CalibrationView)
+    module_coverage: ModuleCoverage = Field(default_factory=ModuleCoverage)
+    risk_dispositions: list[RiskDisposition] = Field(default_factory=list)
     started_at: str
     finished_at: str
     limitations: list[str] = Field(default_factory=list)
@@ -239,7 +311,7 @@ class ArtifactReport(_Model):
 
 
 class ReviewReport(_Model):
-    schema_version: Literal["1.2"] = "1.2"
+    schema_version: Literal["1.3"] = "1.3"
     review_status: ReviewStatus
     policy: PolicyView
     metadata: Metadata
@@ -250,4 +322,6 @@ class ReviewReport(_Model):
     checks: list[CheckResult] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
     conflicts: list[list[str]] = Field(default_factory=list)
+    scenario_assessments: list[ScenarioAssessment] = Field(default_factory=list)
+    consistency_items: list[ConsistencyItem] = Field(default_factory=list)
     artifacts: ArtifactReport = Field(default_factory=ArtifactReport)

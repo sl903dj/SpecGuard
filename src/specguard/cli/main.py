@@ -43,6 +43,7 @@ def _apply_overrides(
     output: str | None,
     subject: str | None = None,
     baseline: bool = False,
+    evidence_scope: str | None = None,
 ) -> SpecGuardConfig:
     data = loaded.model_dump()
     if loaded.artifacts is not None and "openspec" not in loaded.model_fields_set:
@@ -91,6 +92,11 @@ def _apply_overrides(
         data["report"]["formats"] = [item.strip() for item in formats.split(",") if item.strip()]
     if output is not None:
         data["report"]["output_dir"] = output
+    if evidence_scope is not None:
+        normalized = evidence_scope.replace("-", "_")
+        if normalized not in {"range", "target_tree"}:
+            raise ConfigError("evidence_scope 只接受 range 或 target-tree")
+        data["git"]["evidence_scope"] = normalized
     try:
         return SpecGuardConfig.model_validate(data)
     except Exception as exc:
@@ -110,6 +116,7 @@ def review(
     formats: str | None = typer.Option(None, "--format"),
     output: str | None = typer.Option(None, "--output"),
     baseline: bool = typer.Option(False, "--baseline"),
+    evidence_scope: str | None = typer.Option(None, "--evidence-scope"),
 ) -> None:
     """对选定变更或当前规范执行一次只读审核。"""
     try:
@@ -125,6 +132,7 @@ def review(
             output,
             subject,
             baseline,
+            evidence_scope,
         )
         report, code = run_review(
             loaded,

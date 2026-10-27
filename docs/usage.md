@@ -13,7 +13,7 @@ specguard version
 specguard --help
 ```
 
-成功时退出码为 `0`。`specguard version` 的标准输出只有 `0.3.0`。这两条命令不读仓库，也不写报告。
+成功时退出码为 `0`。`specguard version` 的标准输出只有 `0.4.0`。这两条命令不读仓库，也不写报告。
 
 命令找不到时，先回到 [安装说明](install.md)，不要继续审核。下一步进入被审核仓库。
 
@@ -106,3 +106,19 @@ SpecGuard 不接受、不拒绝、也不合并变更。是否接受由工程师�
 ## v0.3 当前规范
 
 `subject_kind: current` 不能再写变更名。只写旧的 `openspec.change` 时，行为仍是变更审核。当前规范报告的 `metadata.change` 和 `artifacts.selected_change` 为空，`tasks_available` 为 `false`，Markdown 写明「任务完整性不可用」。schema 为 `1.2`，1.1 的字段名仍然保留。
+
+## v0.4 证据与对照
+
+报告 schema 为 `1.3`。1.2 的对象种类、任务可用性和兼容字段仍然保留。
+
+证据范围默认是 `range`，只使用 `git.base` 到 `git.target` 的差异。`--evidence-scope target-tree` 或 `git.evidence_scope: target_tree` 只适用于当前 OpenSpec：它读取目标版本的文件内容来找需求证据，不把整棵树记成差异。用在变更或 Spec Kit 上时，审核在检查开始前退出 `4`，并说明「完整内容证据范围只适用于当前规范」。
+
+直接证据只表示找到了需求标识，不表示验收场景已经通过。推断关联不能单独证明需求已经实现。没有线索时写明找不到实现证据。场景会单独给出已有测试支撑、覆盖缺口或场景审核不可用。
+
+审核 OpenSpec 变更时，会对照 `openspec/specs/` 里的当前规范。未声明的对立场景会写出两边的来源位置。已声明的修改或删除不记成冲突。当前规范里变更没有提到的需求不会并进变更清单。没有当前规范时写明「规范对照不可用」。审核当前规范或 Spec Kit 时写明「未做 OpenSpec 当前规范对照」。
+
+历史对照读取报告目录里的 `calibration.json`，由工程师维护。记录缺失或不完整时，报告写明「历史对照未完成」。没有完整历史审核却把 `complete` 标成 true 时，完成标记会被拒绝。完成对照不会打开阻断或自动合并。辅助审查的假设仍然不阻断。
+
+每次报告都会列出九类风险：`boundary`、`exception`、`null_empty`、`transaction`、`concurrency`、`authorization`、`compatibility`、`persisted_data`、`dependency_config`。有真实行号和失败路径时记为发现；否则记为缺少上下文。已检查不等于代码安全。
+
+一次变更碰到多个构建模块、而构建或测试命令按整个仓库配置时，报告点名这些模块，并增加一条状态为 `SKIPPED`、命令为空的 `module-separation` 检查。程序不会另编按模块执行的命令。无法识别布局时只说明限制。

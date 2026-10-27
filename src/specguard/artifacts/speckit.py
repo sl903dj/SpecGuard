@@ -94,7 +94,7 @@ def parse_spec_document(text: str, source: str) -> tuple[list[Requirement], list
                 story_scenarios = []
             continue
         if SCENARIO_RE.match(line):
-            scenario = Scenario(name=line.strip(), source_line=number)
+            scenario = Scenario(name=line.strip(), source_line=number, body=line.strip())
             story_scenarios.append(scenario)
             if active is not None:
                 active.scenarios.append(scenario)

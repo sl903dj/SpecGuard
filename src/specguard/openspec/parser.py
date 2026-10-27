@@ -24,6 +24,21 @@ def _line_of(text: str, index: int) -> int:
     return text.count("\n", 0, index) + 1
 
 
+def _scenarios_from(raw_body: str, text: str, body_offset: int) -> list[Scenario]:
+    matches = list(SCEN_RE.finditer(raw_body))
+    scenarios: list[Scenario] = []
+    for index, item in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(raw_body)
+        scenarios.append(
+            Scenario(
+                name=item.group(1).strip(),
+                source_line=_line_of(text, body_offset + item.start()),
+                body=raw_body[item.end() : end].strip(),
+            )
+        )
+    return scenarios
+
+
 def parse_requirements(change: str, text: str, source: str) -> list[Requirement]:
     requirements: list[Requirement] = []
     headers = list(re.finditer(r"^## (.+)$", text, re.M))
@@ -43,13 +58,7 @@ def parse_requirements(change: str, text: str, source: str) -> list[Requirement]
             body = raw_body.strip()
             absolute = header.end() + match.start()
             body_offset = header.end() + match.end()
-            scenarios = [
-                Scenario(
-                    name=item.group(1).strip(),
-                    source_line=_line_of(text, body_offset + item.start()),
-                )
-                for item in SCEN_RE.finditer(raw_body)
-            ]
+            scenarios = _scenarios_from(raw_body, text, body_offset)
             ambiguous = (not scenarios) or ("TBD" in body) or ("待定" in body) or len(body) < 12
             reason = None
             if ambiguous:
@@ -129,13 +138,7 @@ def parse_current_requirements(text: str, source: str, capability: str) -> list[
                 title=title,
                 capability=capability,
                 change_semantics=None,
-                scenarios=[
-                    Scenario(
-                        name=item.group(1).strip(),
-                        source_line=_line_of(text, body_start + item.start()),
-                    )
-                    for item in SCEN_RE.finditer(raw_body)
-                ],
+                scenarios=_scenarios_from(raw_body, text, body_start),
                 source_file=source,
                 source_line=_line_of(text, match.start()),
                 body=body,
@@ -218,7 +221,10 @@ def load_change(root: Path, change: str, include_main: bool) -> tuple[ArtifactRe
     if spec_files:
         found.append("specs")
         for spec in spec_files:
-            requirements.extend(parse_requirements(change, spec.read_text(encoding="utf-8"), str(spec)))
+            parsed = parse_requirements(change, spec.read_text(encoding="utf-8"), str(spec))
+            for item in parsed:
+                item.capability = spec.parent.name
+            requirements.extend(parsed)
     else:
         missing.append("specs")
     main_specs: list[str] = []
