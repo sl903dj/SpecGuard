@@ -12,7 +12,52 @@ v0.1 的安装入口是 Python 控制台脚本，不要求原生二进制。
 uv tool install "git+https://github.com/sl903dj/SpecGuard"
 ```
 
+这条命令安装 GitHub 默认分支 `master`。未合并到 `master` 的功能分支不在其中，安装方法见 [安装指定分支](#branch-install)。
+
 安装完成后，到被审核仓库里按 [docs/usage.md](usage.md) 运行。该仓库需要自己的 Git 历史、`specguard.yaml`，以及一种需求工件：OpenSpec 进行中的变更、`openspec/specs/` 下的当前规范，或 Spec Kit 功能。操作、排障和内网辅助审查见 [docs/operations.md](operations.md)。
+
+### 安装指定分支
+
+<a id="branch-install"></a>
+
+功能分支不合并到 `master` 时，在地址后面加 `@<分支名>`。整段地址加引号；分支名含斜杠时直接写在 `@` 后面。
+
+```bash
+uv tool install "git+https://github.com/sl903dj/SpecGuard@<分支名>"
+```
+
+例如安装 `005-close-review-gaps`：
+
+```bash
+uv tool install "git+https://github.com/sl903dj/SpecGuard@005-close-review-gaps"
+specguard version
+```
+
+`specguard version` 输出 `0.4.0`。
+
+已经装过 SpecGuard 时，改装另一个分支，或同一分支有了新提交要更新，都用加 `--force` 的命令：
+
+```bash
+uv tool install --force "git+https://github.com/sl903dj/SpecGuard@<分支名>"
+```
+
+装回 `master`：
+
+```bash
+uv tool install --force "git+https://github.com/sl903dj/SpecGuard"
+```
+
+`uv tool upgrade` 不会取得分支上的新提交，不要用它更新按分支安装的 SpecGuard。
+
+查看可安装的分支名：
+
+```bash
+git ls-remote --heads https://github.com/sl903dj/SpecGuard
+```
+
+也可以打开 <https://github.com/sl903dj/SpecGuard/branches>。分支名写错或远端没有该分支时安装失败，已装的版本保持不变。分支已删除或已合并到 `master` 时，改用不带分支的命令。
+
+不能访问 GitHub 时，带分支的地址同样不可用，按 [内网离线安装](#offline-install) 处理。
 
 ## 验证本地源码
 
@@ -25,7 +70,7 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
-`/tmp/specguard-install-check` 里没有 `src/specguard`。`specguard version` 应输出 `0.4.0`。
+`/tmp/specguard-install-check` 里没有 `src/specguard`。`specguard version` 的输出与所装分支或检出的 `pyproject.toml` 版本一致，例如 `master` 为 `0.1.0`，`005-close-review-gaps` 为 `0.4.0`。
 
 ## 内网离线安装
 
@@ -46,10 +91,10 @@ specguard version
 
 从检出根目录安装时，`uv` 会按 `pyproject.toml` 的 `[build-system] requires` 本地构建。构建依赖是 `setuptools>=68`，它不是运行时依赖，`uv export` 不会把它写进 `requirements.txt`，必须单独下载进轮子目录。
 
-外网准备：
+外网准备时，把 `<分支名>` 换成要传入内网的分支。不加 `--branch` 时取默认分支 `master`。之后的 `uv lock` 和 `uv export` 都在这个检出里执行，依赖跟随所选分支。
 
 ```bash
-git clone https://github.com/sl903dj/SpecGuard.git
+git clone --branch <分支名> https://github.com/sl903dj/SpecGuard.git
 cd SpecGuard
 uv lock
 uv export --frozen --no-dev --no-emit-project -o requirements.txt
@@ -67,7 +112,7 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
-该目录没有 `src/specguard`。`specguard version` 应输出 `0.4.0`。
+该目录没有 `src/specguard`。`specguard version` 的输出与所装分支或检出的 `pyproject.toml` 版本一致，例如 `master` 为 `0.1.0`，`005-close-review-gaps` 为 `0.4.0`。
 
 ## 开发者
 

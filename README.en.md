@@ -20,6 +20,16 @@ Version 0.4 reports use schema `1.3`. Requirement evidence and acceptance scenar
 uv tool install "git+https://github.com/sl903dj/SpecGuard"
 ```
 
+This command installs the GitHub default branch, `master`. Feature branches that are not merged into `master` are not included.
+
+To install a feature branch, replace `<branch>` with the remote branch name:
+
+```bash
+uv tool install "git+https://github.com/sl903dj/SpecGuard@<branch>"
+```
+
+Switching to another branch, updating a branch, going back to `master`, and listing branch names are covered in [install a branch](docs/install.md#branch-install).
+
 To verify a local checkout, replace `<checkout>` with its absolute path, then run the command from a directory that does not contain `src/specguard`:
 
 ```bash

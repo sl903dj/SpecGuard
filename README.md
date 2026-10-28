@@ -20,6 +20,16 @@ v0.4 的报告 schema 为 `1.3`。需求证据和验收场景分开记录。审�
 uv tool install "git+https://github.com/sl903dj/SpecGuard"
 ```
 
+这条命令安装 GitHub 默认分支 `master`。未合并到 `master` 的功能分支不在其中。
+
+安装功能分支时，把 `<分支名>` 换成远端分支名：
+
+```bash
+uv tool install "git+https://github.com/sl903dj/SpecGuard@<分支名>"
+```
+
+改装其他分支、更新分支、装回 `master` 和查看分支名，见 [安装指定分支](docs/install.md#branch-install)。
+
 验证本地源码时，把 `<checkout>` 换成源码检出的绝对路径，再进入一个没有 `src/specguard` 的目录：
 
 ```bash
