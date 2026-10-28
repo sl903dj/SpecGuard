@@ -30,6 +30,18 @@
 |------|------|----------|
 | C13 | 两处版本核对不再把 `0.4.0` 写成任何安装的固定结果，改为与所装分支一致 | FR-007 |
 
+## 卸载（User Story 5）
+
+| 编号 | 要求 | 对应需求 |
+|------|------|----------|
+| C14 | README.md、README.en.md、docs/install.md 都含 `uv tool uninstall specguard`；README 链接 `docs/install.md#uninstall` | FR-011 |
+| C15 | docs/install.md 有 `## 卸载` 一节和 `<a id="uninstall"></a>`，位于 `## 开发者` 之后 | FR-012、plan 结构决定 |
+| C16 | 卸载一节写明适用于默认分支、指定分支、本地检出和离线安装，并含 `command -v specguard` 和 `hash -r` | FR-012、Edge Cases |
+| C17 | 卸载一节含 `specguard.yaml`、`.specguard/reports/`、`calibration.json`，写明“保留”和“手工删除” | FR-013 |
+| C18 | 卸载一节含 `uv cache clean specguard`，写明“可选” | FR-014 |
+| C19 | 卸载一节含 `` `specguard` is not installed ``；写明离线卸载“不需要联网”，并提到 `/tmp/specguard-wheels` | FR-015 |
+| C20 | 卸载一节写明换分支“不需要先卸载”，并提到 `.venv` | FR-016 |
+
 ## 不变项
 
 - 现有 `test_install_entry.py` 的全部断言继续通过。

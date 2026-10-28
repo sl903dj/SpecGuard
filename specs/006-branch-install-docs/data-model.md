@@ -33,3 +33,25 @@
 ```
 
 `uv tool upgrade specguard` 不会取得分支上的新提交，文档不把它作为更新方式。
+
+## 卸载范围
+
+| 对象 | 卸载命令是否删除 | 文档中的处理 |
+|------|------------------|--------------|
+| `specguard` 命令和工具环境 | 删除 | `uv tool uninstall specguard` |
+| 被审核仓库的 `specguard.yaml`、`.specguard/reports/`（含 `calibration.json`） | 不删除 | 保留，需要时由使用者手工删除；文档不给删除命令 |
+| uv 下载缓存 | 不删除 | 可选：`uv cache clean specguard` |
+| 离线传入的源码目录和 `/tmp/specguard-wheels` | 不删除 | 需要时手工删除 |
+| 开发者检出里的 `.venv` | 不删除 | 需要时删除该检出里的 `.venv` |
+| 用户主目录下的配置 | 不存在 | 无需处理 |
+
+## 卸载状态变化
+
+```text
+已装（任一来源） --uv tool uninstall specguard--> 未安装（退出码 0）
+未安装 --uv tool uninstall specguard--> 提示 `specguard` is not installed（退出码 2），无其他影响
+未安装 --任一安装命令--> 已装
+已装 A --改装分支--> 已装 B（不需要先卸载）
+```
+
+卸载后在原终端里，shell 可能仍缓存着旧路径，运行时报 `No such file or directory`。执行 `hash -r` 或新开终端后，`command -v specguard` 无输出。

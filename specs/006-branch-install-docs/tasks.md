@@ -178,6 +178,77 @@ description: "Task list for 006-branch-install-docs"
 
 ---
 
+## Phase 8: User Story 5 - 卸载 SpecGuard (Priority: P2)
+
+**Goal**: 三份文档给出卸载命令。docs/install.md 末尾新增“## 卸载”一节，覆盖契约 C14 到 C20，对应 FR-011 到 FR-016：
+
+- 卸载适用于所有安装来源；
+- 卸载后如何确认；
+- 被审核仓库的配置和报告保留；
+- 可选的缓存清理；
+- 重复卸载的提示；
+- 离线安装的残留目录；
+- 换分支不需要先卸载；
+- `.venv` 不受影响。
+
+**Independent Test**: 只按 docs/install.md 的卸载一节操作，`command -v specguard` 无输出；被审核仓库里 `specguard.yaml` 和 `.specguard/reports/` 的文件指纹不变（quickstart 第 3 节）
+
+**前提**：T001 到 T024 已完成，当前全量基线为 `185 passed`。`_section`、`DEFAULT_INSTALL` 等辅助代码已在 T002 中加好，直接复用。
+
+### Tests for User Story 5
+
+- [X] T025 [US5] 在 tests/unit/test_install_entry.py 新增 `test_docs_explain_uninstall`。运行后确认该测试失败。检查内容如下：
+  - README.md、README.en.md、docs/install.md 都含 `uv tool uninstall specguard`；README.md 和 README.en.md 都含 `docs/install.md#uninstall`（C14）
+  - docs/install.md 含 `<a id="uninstall"></a>`，且 `text.index("## 卸载")` 大于 `text.index("## 开发者")`（C15）
+  - 取 `uninstall = _section(text, "## 卸载")`，其中依次含以下内容：
+    - `默认分支`、`指定分支`、`本地检出`、`离线安装`、`command -v specguard`、`hash -r`（C16）
+    - `specguard.yaml`、`.specguard/reports/`、`calibration.json`、`保留`、`手工删除`（C17）
+    - `uv cache clean specguard`、`可选`（C18）
+    - `` `specguard` is not installed ``、`不需要联网`、`/tmp/specguard-wheels`（C19）
+    - `不需要先卸载`、`.venv`（C20）
+  - `uninstall` 中不含 `rm `，确保不给出删除被审核仓库文件的命令（research R9）
+
+### Implementation for User Story 5
+
+- [X] T026 [P] [US5] 在 README.md “## 安装”中、“安装和运行的其余步骤见”一段之前，加入卸载说明：
+  - 一句“卸载：”；
+  - 命令块 `uv tool uninstall specguard`；
+  - 一句“卸载不会删除被审核仓库里的配置和报告，详见 [卸载](docs/install.md#uninstall)。”
+- [X] T027 [P] [US5] 在 README.en.md “## Install” 的对应位置，即 “Further install and run steps are in” 一段之前，加入与 T026 含义相同的英文说明：
+  - 命令块 `uv tool uninstall specguard`；
+  - 说明卸载不删除被审核仓库的配置和报告；
+  - 链接 `docs/install.md#uninstall`。
+- [X] T028 [US5] 在 docs/install.md 文件末尾、“## 开发者”一节之后，新增 `## 卸载` 和 `<a id="uninstall"></a>`。依次写入以下内容，依据见 research R8 到 R11 和 data-model“卸载范围”：
+  1. 命令块 `uv tool uninstall specguard`。写明它适用于默认分支、指定分支、本地检出和离线安装的 SpecGuard，按工具名删除命令和工具环境。
+  2. 确认方法：运行 `command -v specguard`，没有输出即已卸载。在原终端里如果报 `No such file or directory`，先执行 `hash -r`，或新开一个终端。
+  3. 被审核仓库里的 `specguard.yaml` 和 `.specguard/reports/`（含 `calibration.json`）都保留。卸载不修改被审核仓库，需要时由使用者手工删除。不要写删除命令。
+  4. 可选：`uv cache clean specguard` 只清除 SpecGuard 的下载缓存，用于释放磁盘空间，不是卸载的必需步骤。
+  5. 已卸载后再运行卸载，会提示 `` `specguard` is not installed ``，这不是故障。
+  6. 离线安装的卸载用同一条命令，不需要联网。传入内网的源码目录和 `/tmp/specguard-wheels` 需要另外手工删除。
+  7. 换分支不需要先卸载，见 [安装指定分支](#branch-install)。开发者检出里的 `.venv` 不受卸载命令影响，需要时删除该检出里的 `.venv`。
+
+  注意：该节文字不得包含 `mkdir -p /tmp/specguard-install-check`，也不得包含“空目录是当前工作目录，不是安装位置”，以免影响 `test_empty_directory_is_only_for_version_check` 对离线段的定位。
+- [X] T029 [US5] 运行 `.venv/bin/python -m pytest -q tests/unit/test_install_entry.py`，T025 与现有测试全部通过
+
+**Checkpoint**: US5 可独立验证
+
+---
+
+## Phase 9: Polish（卸载部分）
+
+- [X] T030 [P] 对照 README.md 与 README.en.md 的卸载说明，逐句确认含义一致（FR-009）
+- [X] T031 [P] 确认 `git diff --stat` 只涉及 README.md、README.en.md、docs/install.md、tests/unit/test_install_entry.py 和 specs/006-branch-install-docs/，不改 `src/` 和 `pyproject.toml`（FR-010）
+- [X] T032 运行全量 `.venv/bin/python -m pytest -q`，预期 `186 passed`
+- [X] T033 按 specs/006-branch-install-docs/quickstart.md 第 3 节，在隔离的 `UV_TOOL_DIR`/`UV_TOOL_BIN_DIR` 中照新文档卸载：
+  - 预期卸载退出码 `0`，`bin` 目录为空；
+  - 重复卸载退出码 `2`，提示 `` `specguard` is not installed ``；
+  - 模拟被审核仓库的文件指纹无差异；
+  - 结束后清理临时目录。
+  - 不动 `~/.local/bin` 下使用者的真实安装。
+- [X] T034 把 T032、T033 的结果追加到 specs/006-branch-install-docs/quickstart.md 末尾的“验证记录”
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -191,6 +262,11 @@ description: "Task list for 006-branch-install-docs"
 - **US2 (P1)**: 依赖 US1。T009、T010 的插入位置在 T004、T005 的句子之后，T011 与 T006 改同一节
 - **US3 (P2)**: 依赖 T002。改的是版本核对句，与 US1、US2 的段落不重叠，可以在 US1 之后任何时候做
 - **US4 (P3)**: 依赖 T002。只改离线一节；与 US3 的 T014 改同一文件的不同段落，按顺序做
+- **US5 (P2)**：
+  - 依赖 T002 中的 `_section` 辅助函数，该函数已完成。
+  - T026、T027 依赖 US2 已加入 README 的段落，用来确定插入位置，这部分也已完成。
+  - T028 只在 docs/install.md 末尾追加，与前面各节不重叠。
+  - US5 不依赖未完成的任务，可以立即开始。
 
 ### Within Each User Story
 
@@ -202,6 +278,9 @@ description: "Task list for 006-branch-install-docs"
 - T009、T010 可以并行，T011 改 docs/install.md，单独做
 - T014 与 T015 分别改 docs/install.md 和 docs/operations.md，可以并行
 - T020 与 T021 可以并行
+- T025 确认失败后，T026、T027 分别改两份 README，可以并行；T028 改 docs/install.md，单独做
+- T030 与 T031 可以并行
+- 同一文件的多处修改必须逐处顺序进行，不要并行提交
 
 ---
 
@@ -231,6 +310,7 @@ Task: "T006 docs/install.md 使用者一节加默认分支说明"
 3. US3：版本核对不再误导
 4. US4：离线也能选定分支
 5. Polish：全量测试，并照文档实际安装验证
+6. US5：卸载说明（T025 到 T029），然后做 Phase 9 的复核与实测（T030 到 T034）。T001 到 T024 已完成，这一步是当前要做的增量。
 
 ---
 
@@ -239,3 +319,7 @@ Task: "T006 docs/install.md 使用者一节加默认分支说明"
 - 只改文档和文档检查，不改运行代码与版本号
 - 新增断言用完全匹配的原文，避免靠模糊匹配通过
 - 不得删除或削弱现有断言
+
+## Phase 10: Convergence
+
+- [X] T035 在 specs/006-branch-install-docs/quickstart.md 第 2、3 节的隔离环境变量中加入 `UV_CACHE_DIR=/tmp/sg-check/cache`，使 `uv cache clean specguard` 只清除隔离缓存；并在两节的清理步骤中一并 `unset UV_CACHE_DIR`、删除该目录，让“隔离目录，不影响已装版本”的说法与实际一致 per plan: quickstart 验证指南 / T033 (partial)

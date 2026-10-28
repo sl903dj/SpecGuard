@@ -39,6 +39,14 @@ cd /tmp/specguard-install-check
 specguard version
 ```
 
+To uninstall:
+
+```bash
+uv tool uninstall specguard
+```
+
+Uninstalling does not delete the configuration or reports in reviewed repositories. See [uninstall](docs/install.md#uninstall).
+
 Further install and run steps are in [docs/install.md](docs/install.md). When the machine cannot reach GitHub or PyPI, follow [offline install](docs/install.md#offline-install) and carry the source plus dependency wheels in by hand.
 
 After install, follow the steps in [docs/usage.md](docs/usage.md). Object selection, exit-code troubleshooting, intranet assisted review, and CI are in [docs/operations.md](docs/operations.md). Both guides are in Chinese.

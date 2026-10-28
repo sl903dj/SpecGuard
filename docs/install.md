@@ -123,3 +123,25 @@ uv venv
 uv pip install -e ".[dev]"
 .venv/bin/python -m pytest
 ```
+
+## 卸载
+
+<a id="uninstall"></a>
+
+```bash
+uv tool uninstall specguard
+```
+
+这条命令适用于默认分支、指定分支、本地检出和离线安装的 SpecGuard。它按工具名删除 `specguard` 命令及其工具环境，不看安装来源。
+
+确认卸载：运行 `command -v specguard`，没有输出即已卸载。在卸载前打开的终端里运行 `specguard`，可能报 `No such file or directory`，这是终端还记着旧路径。执行 `hash -r` 或新开一个终端即可。
+
+卸载不修改被审核仓库。仓库里的 `specguard.yaml` 和 `.specguard/reports/`（含 `calibration.json`）都保留；不再需要时，由使用者手工删除。
+
+可选：`uv cache clean specguard` 只清除 SpecGuard 的下载缓存，用于释放磁盘空间，不是卸载的必需步骤。
+
+已经卸载后再运行卸载命令，会提示 `` `specguard` is not installed ``，这不是故障。
+
+离线安装的卸载用同一条命令，不需要联网。传入内网的源码目录和 `/tmp/specguard-wheels` 不在卸载范围内，需要时手工删除。
+
+换分支不需要先卸载，见 [安装指定分支](#branch-install)。开发者检出里的 `.venv` 不受卸载命令影响，需要时删除该检出里的 `.venv`。

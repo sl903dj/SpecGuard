@@ -168,6 +168,40 @@ def test_offline_install_selects_branch() -> None:
     assert "`master`" in offline
 
 
+def test_docs_explain_uninstall() -> None:
+    text = (ROOT / "docs" / "install.md").read_text(encoding="utf-8")
+    for name in ("README.md", "README.en.md"):
+        readme = (ROOT / name).read_text(encoding="utf-8")
+        assert "uv tool uninstall specguard" in readme
+        assert "docs/install.md#uninstall" in readme
+    assert '<a id="uninstall"></a>' in text
+    assert text.index("## 卸载") > text.index("## 开发者")
+    uninstall = _section(text, "## 卸载")
+    for phrase in (
+        "uv tool uninstall specguard",
+        "默认分支",
+        "指定分支",
+        "本地检出",
+        "离线安装",
+        "command -v specguard",
+        "hash -r",
+        "specguard.yaml",
+        ".specguard/reports/",
+        "calibration.json",
+        "保留",
+        "手工删除",
+        "uv cache clean specguard",
+        "可选",
+        "`specguard` is not installed",
+        "不需要联网",
+        "/tmp/specguard-wheels",
+        "不需要先卸载",
+        ".venv",
+    ):
+        assert phrase in uninstall, phrase
+    assert "rm " not in uninstall
+
+
 def test_empty_directory_is_only_for_version_check() -> None:
     text = (ROOT / "docs" / "install.md").read_text(encoding="utf-8")
     local, offline = text.split("## 内网离线安装", 1)

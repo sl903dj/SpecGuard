@@ -53,3 +53,43 @@
   - `docs/install.md` 含 `--force` 改装命令、查看分支的方式和 `git clone --branch`。
   - `docs/install.md` 不再出现“应输出 `0.4.0`”。
 - **Baseline**：修改前全量测试为 `181 passed`。现有断言要求保留不带分支的命令原文和 `https://github.com/sl903dj/SpecGuard.git`，新方案都满足。
+
+## R8：卸载命令及其效果
+
+- **Decision**：卸载命令统一写 `uv tool uninstall specguard`。卸载后用 `command -v specguard` 确认没有输出；如果在原终端里运行报 `No such file or directory`，先执行 `hash -r` 或新开终端。
+- **Evidence**（2026-10-28，服务器上的真实安装，来源 `@006-branch-install-docs`，版本 `0.4.0`）：
+  - `uv tool uninstall specguard` 输出 `Uninstalled 1 executable: specguard`，退出码 `0`。`~/.local/bin/specguard` 和工具环境目录都被删除，`uv tool list` 只剩其他工具。
+  - 在原终端里直接运行 `specguard version`，报 `/home/vncuser/.local/bin/specguard: No such file or directory`，退出码 `127`，因为 shell 缓存了旧路径。执行 `hash -r` 后，`command -v specguard` 无输出，退出码 `1`。
+  - 测完后用 `uv tool install "git+https://github.com/sl903dj/SpecGuard@006-branch-install-docs"` 装回，`specguard version` 输出 `0.4.0`。
+- **适用范围**：安装凭据记录在工具目录的 `uv-receipt.toml` 中，例如 `git = "https://github.com/sl903dj/SpecGuard?rev=006-branch-install-docs"`。卸载按工具名删除，不看来源，所以默认分支、指定分支、本地检出和离线安装都用同一条命令。在隔离目录中，从本地 `git+file://` 检出安装后卸载，结果相同。
+- **Alternatives considered**：手工删除 `~/.local/bin/specguard`。这样会留下工具环境，且依赖安装路径，不采用。
+
+## R9：卸载不动被审核仓库
+
+- **Decision**：文档写明被审核仓库里的 `specguard.yaml` 和 `.specguard/reports/`（含 `calibration.json`）在卸载后保留，需要时由使用者手工删除。文档不给出删除命令，避免误删。
+- **Evidence**：
+  - 在模拟的被审核仓库里放了 `specguard.yaml`、`.specguard/reports/calibration.json` 和一份报告，卸载前后 3 个文件的 SHA-256 完全一致。
+  - `src/` 中没有 `expanduser`、`Path.home` 或 XDG 目录的读写，报告默认目录是 `.specguard/reports`，见 `src/specguard/config/models.py` 的 `output_dir`。因此不存在用户级配置要清理。
+- **Rationale**：宪章 V 要求审核只写报告目录。卸载说明同样不应引导使用者去改被审核仓库。
+
+## R10：重复卸载与缓存清理
+
+- **Decision**：
+  - 文档说明重复卸载会提示 `` `specguard` is not installed ``，这不是故障。
+  - 缓存清理 `uv cache clean specguard` 标为可选，只为释放磁盘空间。
+- **Evidence**：
+  - 重复卸载：退出码 `2`，其他工具不受影响。
+  - 缓存清理：在隔离安装后运行，输出 `Removed 488 files (2.4MiB)`，退出码 `0`；之后 `uv tool list` 中的其他工具都在。
+- **Alternatives considered**：`uv cache clean` 不带包名。会清掉所有工具的缓存，范围过大，不采用。
+
+## R11：离线安装与开发者环境的残留
+
+- **Decision**：
+  - 离线安装的卸载用同一条命令，不需要联网。传入内网的源码目录和 `/tmp/specguard-wheels` 要另外手工删除。
+  - 开发者检出里的 `.venv` 不受卸载影响。
+  - 换分支不需要先卸载，引用 R3。
+- **Evidence**：
+  - `uv tool uninstall` 只删除本地工具目录，不访问网络。隔离测试中以 `--offline` 安装后卸载，同样成功。
+  - 离线一节已写明手工拷入的两个目录，`uv tool` 不知道它们的位置。
+  - R3 已证明改装分支会直接替换。
+- **Testing**：新增检查放在 `tests/unit/test_install_entry.py`，先确认失败再改文档。当前基线为 `185 passed`。
